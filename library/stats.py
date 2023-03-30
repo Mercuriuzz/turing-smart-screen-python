@@ -244,6 +244,26 @@ class CPU:
                                                    None))
             )
 
+        if config.THEME_DATA['STATS']['CPU']['TEMPERATURE']['GRAPH'].get("SHOW", False):
+
+            cpu_temp = f"{int(sensors.Cpu.temperature()):>3}"
+            display.lcd.DisplayProgressBar(
+                x=config.THEME_DATA['STATS']['CPU']['TEMPERATURE']['GRAPH'].get("X", 0),
+                y=config.THEME_DATA['STATS']['CPU']['TEMPERATURE']['GRAPH'].get("Y", 0),
+                width=config.THEME_DATA['STATS']['CPU']['TEMPERATURE']['GRAPH'].get("WIDTH", 0),
+                height=config.THEME_DATA['STATS']['CPU']['TEMPERATURE']['GRAPH'].get("HEIGHT", 0),
+                value=int(cpu_temp),
+                min_value=config.THEME_DATA['STATS']['CPU']['TEMPERATURE']['GRAPH'].get("MIN_VALUE", 0),
+                max_value=config.THEME_DATA['STATS']['CPU']['TEMPERATURE']['GRAPH'].get("MAX_VALUE", 100),
+                bar_color=config.THEME_DATA['STATS']['CPU']['TEMPERATURE']['GRAPH'].get("BAR_COLOR", (0, 0, 0)),
+                bar_outline=config.THEME_DATA['STATS']['CPU']['TEMPERATURE']['GRAPH'].get("BAR_OUTLINE", False),
+                background_color=config.THEME_DATA['STATS']['CPU']['TEMPERATURE']['GRAPH'].get("BACKGROUND_COLOR",
+                                                                                              (255, 255, 255)),
+                background_image=get_full_path(config.THEME_DATA['PATH'],
+                                               config.THEME_DATA['STATS']['CPU']['TEMPERATURE']['GRAPH'].get(
+                                                   "BACKGROUND_IMAGE",
+                                                   None))
+            )
 
 def display_gpu_stats(load, memory_percentage, memory_used_mb, temperature):
     if config.THEME_DATA['STATS']['GPU']['PERCENTAGE']['GRAPH'].get("SHOW", False):
@@ -366,6 +386,27 @@ def display_gpu_stats(load, memory_percentage, memory_used_mb, temperature):
                                                                                               (255, 255, 255)),
                 background_image=get_full_path(config.THEME_DATA['PATH'],
                                                config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['TEXT'].get(
+                                                   "BACKGROUND_IMAGE",
+                                                   None))
+            )
+            
+            if config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH'].get("SHOW", False):
+
+            temp_text = f"{int(temperature):>3}"
+            display.lcd.DisplayProgressBar(
+                x=config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH'].get("X", 0),
+                y=config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH'].get("Y", 0),
+                width=config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH'].get("WIDTH", 0),
+                height=config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH'].get("HEIGHT", 0),
+                value=int(temp_text),
+                min_value=config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH'].get("MIN_VALUE", 0),
+                max_value=config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH'].get("MAX_VALUE", 100),
+                bar_color=config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH'].get("BAR_COLOR", (0, 0, 0)),
+                bar_outline=config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH'].get("BAR_OUTLINE", False),
+                background_color=config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH'].get("BACKGROUND_COLOR",
+                                                                                              (255, 255, 255)),
+                background_image=get_full_path(config.THEME_DATA['PATH'],
+                                               config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH'].get(
                                                    "BACKGROUND_IMAGE",
                                                    None))
             )
