@@ -1,0 +1,377 @@
+---
+display:
+  DISPLAY_ORIENTATION: portrait
+  DISPLAY_RGB_LED: 255, 0, 0
+
+static_images:
+  BACKGROUND:
+    PATH: background.png
+    X: 0
+    Y: 0
+    WIDTH: 320
+    HEIGHT: 480
+#static_text:
+#  TEXT_EXAMPLE:
+#   TEXT: Add your custom text here!
+#   X: 20
+#   Y: 400
+#   FONT: geforce/GeForce-Bold.ttf
+#   FONT_SIZE: 20
+#   FONT_COLOR: 255, 255, 255
+#   BACKGROUND_IMAGE: background.png
+STATS:
+  CPU:
+    TEMPERATURE:
+      INTERVAL: 5
+      GRAPH:
+        SHOW: True
+        X: 101
+        Y: 62
+        WIDTH: 200
+        HEIGHT: 12
+        MIN_VALUE: 20
+        MAX_VALUE: 120
+        BAR_COLOR: 0, 255, 0
+        BAR_OUTLINE: False
+        BACKGROUND_IMAGE: background.png
+      TEXT:
+        SHOW: True
+        SHOW_UNIT: True
+        X: 52
+        Y: 62
+        FONT: nimbus-mono/nimbus-mono-b.ttf
+        FONT_SIZE: 15
+        FONT_COLOR: 0, 255, 0
+        BACKGROUND_COLOR: 0, 0, 0
+    PERCENTAGE:
+      INTERVAL: 1
+      TEXT:
+        SHOW: True
+        SHOW_UNIT: True
+        X: 60
+        Y: 46
+        FONT: nimbus-mono/nimbus-mono-b.ttf
+        FONT_SIZE: 15
+        FONT_COLOR: 0, 255, 0
+        BACKGROUND_COLOR: 0, 0, 0
+      GRAPH:
+        SHOW: True
+        X: 101
+        Y: 46
+        WIDTH: 200
+        HEIGHT: 12
+        MIN_VALUE: 0
+        MAX_VALUE: 100
+        BAR_COLOR: 0, 255, 0
+        BAR_OUTLINE: False
+        BACKGROUND_IMAGE: background.png
+    FREQUENCY:
+      INTERVAL: 5
+      TEXT:
+        SHOW: True
+        SHOW_UNIT: True
+        X: 100
+        Y: 78
+        FONT: nimbus-mono/nimbus-mono-b.ttf
+        FONT_SIZE: 15
+        FONT_COLOR: 0, 255, 0
+        BACKGROUND_COLOR: 0, 0, 0
+  GPU:
+    INTERVAL: 1
+    PERCENTAGE:
+      TEXT:
+        SHOW: True
+        SHOW_UNIT: True
+        X: 60
+        Y: 119
+        FONT: nimbus-mono/nimbus-mono-b.ttf
+        FONT_SIZE: 15
+        FONT_COLOR: 0, 255, 0
+        BACKGROUND_COLOR: 0, 0, 0
+      GRAPH:
+        SHOW: True
+        X: 101
+        Y: 119
+        WIDTH: 200
+        HEIGHT: 12
+        MIN_VALUE: 0
+        MAX_VALUE: 100
+        BAR_COLOR: 0, 255, 0
+        BAR_OUTLINE: False
+        BACKGROUND_IMAGE: background.png
+    MEMORY:
+      TEXT:
+        SHOW: True
+        SHOW_UNIT: True
+        UNIT: G
+        X: 52
+        Y: 137
+        FONT: nimbus-mono/nimbus-mono-b.ttf
+        FONT_SIZE: 15
+        FONT_COLOR: 0, 255, 0
+        BACKGROUND_COLOR: 0, 0, 0
+      GRAPH:
+        SHOW: True
+        X: 101
+        Y: 136
+        WIDTH: 200
+        HEIGHT: 12
+        MIN_VALUE: 0
+        MAX_VALUE: 100
+        BAR_COLOR: 0, 255, 0
+        BAR_OUTLINE: False
+        BACKGROUND_IMAGE: background.png
+    TEMPERATURE:
+      TEXT:
+        SHOW: True
+        SHOW_UNIT: True
+        X: 52
+        Y: 153
+        FONT: nimbus-mono/nimbus-mono-b.ttf
+        FONT_SIZE: 15
+        FONT_COLOR: 0, 255, 0
+        BACKGROUND_COLOR: 0, 0, 0
+      GRAPH:
+        SHOW: True
+        X: 101
+        Y: 153
+        WIDTH: 200
+        HEIGHT: 12
+        MIN_VALUE: 0
+        MAX_VALUE: 100
+        BAR_COLOR: 0, 255, 0
+        BAR_OUTLINE: False
+        BACKGROUND_IMAGE: background.png
+  MEMORY:
+    INTERVAL: 5
+    SWAP:
+      GRAPH:
+        SHOW: False
+        X: 115
+        Y: 285
+        WIDTH: 178
+        HEIGHT: 13
+        MIN_VALUE: 0
+        MAX_VALUE: 100
+        BAR_COLOR: 255, 0, 0
+        BAR_OUTLINE: False
+        BACKGROUND_COLOR: 0, 0, 0
+    VIRTUAL:
+      GRAPH:
+        SHOW: True
+        X: 101
+        Y: 195
+        WIDTH: 200
+        HEIGHT: 12
+        MIN_VALUE: 0
+        MAX_VALUE: 100
+        BAR_COLOR: 0, 255, 0
+        BAR_OUTLINE: False
+        BACKGROUND_IMAGE: background.png
+      PERCENT_TEXT:
+        SHOW: True
+        SHOW_UNIT: True
+        X: 60
+        Y: 195
+        FONT: nimbus-mono/nimbus-mono-b.ttf
+        FONT_SIZE: 15
+        FONT_COLOR: 0, 255, 0
+        BACKGROUND_COLOR: 0, 0, 0
+      USED:
+        SHOW: True
+        SHOW_UNIT: True
+        X: 100
+        Y: 211
+        FONT: nimbus-mono/nimbus-mono-b.ttf
+        FONT_SIZE: 15
+        FONT_COLOR: 0, 255, 0
+        BACKGROUND_COLOR: 0, 0, 0
+      FREE:
+        SHOW: True
+        SHOW_UNIT: True
+        X: 100
+        Y: 227
+        FONT: nimbus-mono/nimbus-mono-b.ttf
+        FONT_SIZE: 15
+        FONT_COLOR: 0, 255, 0
+        BACKGROUND_COLOR: 0, 0, 0
+  DISK:
+    INTERVAL: 10
+#    USED:
+#      GRAPH:
+#        SHOW: False
+#        X: 115
+#        Y: 357
+#        WIDTH: 178
+#        HEIGHT: 13
+#        MIN_VALUE: 0
+#        MAX_VALUE: 100
+#        BAR_COLOR: 255, 0, 0
+#        BAR_OUTLINE: False
+#        BACKGROUND_COLOR: 0, 0, 0
+  DISKS:
+    DISK1:
+        PARTITION: "/home"
+        USED:
+          GRAPH:
+            SHOW: True
+            X: 100
+            Y: 385
+            WIDTH: 200
+            HEIGHT: 12
+            MIN_VALUE: 0
+            MAX_VALUE: 100
+            BAR_COLOR: 0, 255, 0
+            BAR_OUTLINE: False
+            BACKGROUND_IMAGE: background.png
+          PERCENT_TEXT:
+            SHOW: True
+            SHOW_UNIT: True
+            X: 60
+            Y: 385
+            FONT: nimbus-mono/nimbus-mono-b.ttf
+            FONT_SIZE: 15
+            FONT_COLOR: 0, 255, 0
+            BACKGROUND_COLOR: 0, 0, 0
+    DISK2:
+        PARTITION: "/"
+        USED:
+          GRAPH:
+            SHOW: True
+            X: 100
+            Y: 400
+            WIDTH: 200
+            HEIGHT: 12
+            MIN_VALUE: 0
+            MAX_VALUE: 100
+            BAR_COLOR: 0, 255, 0
+            BAR_OUTLINE: False
+            BACKGROUND_IMAGE: background.png
+          PERCENT_TEXT:
+            SHOW: True
+            SHOW_UNIT: True
+            X: 60
+            Y: 400
+            FONT: nimbus-mono/nimbus-mono-b.ttf
+            FONT_SIZE: 15
+            FONT_COLOR: 0, 255, 0
+            BACKGROUND_COLOR: 0, 0, 0
+    DISK3:
+        PARTITION: "/var"
+        USED:
+          GRAPH:
+            SHOW: True
+            X: 100
+            Y: 416
+            WIDTH: 200
+            HEIGHT: 11
+            MIN_VALUE: 0
+            MAX_VALUE: 100
+            BAR_COLOR: 0, 255, 0
+            BAR_OUTLINE: False
+            BACKGROUND_IMAGE: background.png
+          PERCENT_TEXT:
+            SHOW: True
+            SHOW_UNIT: True
+            X: 60
+            Y: 416
+            FONT: nimbus-mono/nimbus-mono-b.ttf
+            FONT_SIZE: 15
+            FONT_COLOR: 0, 255, 0
+            BACKGROUND_COLOR: 0, 0, 0
+    DISK4:
+        PARTITION: "/old/home"
+        USED:
+          GRAPH:
+            SHOW: True
+            X: 100
+            Y: 431
+            WIDTH: 200
+            HEIGHT: 12
+            MIN_VALUE: 0
+            MAX_VALUE: 100
+            BAR_COLOR: 0, 255, 0
+            BAR_OUTLINE: False
+            BACKGROUND_IMAGE: background.png
+          PERCENT_TEXT:
+            SHOW: True
+            SHOW_UNIT: True
+            X: 60
+            Y: 431
+            FONT: nimbus-mono/nimbus-mono-b.ttf
+            FONT_SIZE: 15
+            FONT_COLOR: 0, 255, 0
+            BACKGROUND_COLOR: 0, 0, 0
+    DISK5:
+        PARTITION: "/old/var"
+        USED:
+          GRAPH:
+            SHOW: True
+            X: 100
+            Y: 446
+            WIDTH: 200
+            HEIGHT: 12
+            MIN_VALUE: 0
+            MAX_VALUE: 100
+            BAR_COLOR: 0, 255, 0
+            BAR_OUTLINE: False
+            BACKGROUND_IMAGE: background.png
+          PERCENT_TEXT:
+            SHOW: True
+            SHOW_UNIT: True
+            X: 60
+            Y: 446
+            FONT: nimbus-mono/nimbus-mono-b.ttf
+            FONT_SIZE: 15
+            FONT_COLOR: 0, 255, 0
+            BACKGROUND_COLOR: 0, 0, 0
+  NET:
+    INTERVAL: 1
+    ETH:
+      DOWNLOAD:
+        TEXT:
+          SHOW: True
+          X: 100
+          Y: 327
+          FONT: nimbus-mono/nimbus-mono-b.ttf
+          FONT_SIZE: 15
+          FONT_COLOR: 0, 255, 0
+          BACKGROUND_COLOR: 0, 0, 0
+      DOWNLOADED:
+        TEXT:
+          SHOW: True
+          X: 100
+          Y: 343
+          FONT: nimbus-mono/nimbus-mono-b.ttf
+          FONT_SIZE: 15
+          FONT_COLOR: 0, 255, 0
+          BACKGROUND_COLOR: 0, 0, 0
+      UPLOAD:
+        TEXT:
+          SHOW: True
+          X: 100
+          Y: 271
+          FONT: nimbus-mono/nimbus-mono-b.ttf
+          FONT_SIZE: 15
+          FONT_COLOR: 0, 255, 0
+          BACKGROUND_COLOR: 0, 0, 0
+      UPLOADED:
+        TEXT:
+          SHOW: True
+          X: 100
+          Y: 286
+          FONT: nimbus-mono/nimbus-mono-b.ttf
+          FONT_SIZE: 15
+          FONT_COLOR: 0, 255, 0
+          BACKGROUND_COLOR: 0, 0, 0
+  DATE:
+    INTERVAL: 1
+    HOUR:
+      TEXT:
+        SHOW: True
+        X: 234
+        Y: 5
+        FONT: nimbus-mono/nimbus-mono-b.ttf
+        FONT_SIZE: 15
+        FONT_COLOR: 0, 255, 0
+        BACKGROUND_COLOR: 0, 0, 00

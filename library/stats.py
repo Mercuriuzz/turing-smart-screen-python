@@ -347,7 +347,12 @@ def display_gpu_stats(load, memory_percentage, memory_used_mb, temperature):
         else:
             mem_used_text = f"{int(memory_used_mb):>5}"
             if config.THEME_DATA['STATS']['GPU']['MEMORY']['TEXT'].get("SHOW_UNIT", True):
-                mem_used_text += " M"
+                if config.THEME_DATA['STATS']['GPU']['MEMORY']['TEXT'].get("UNIT", "M") == "M":
+                    mem_used_text += " M"
+                else:
+                    mem_used_text = f"{int(memory_used_mb/1000):>3}"
+                    mem_used_text += " G"
+
 
             display.lcd.DisplayText(
                 text=mem_used_text,
@@ -390,26 +395,26 @@ def display_gpu_stats(load, memory_percentage, memory_used_mb, temperature):
                                                    None))
             )
             
-            if config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH'].get("SHOW", False):
-
-            temp_text = f"{int(temperature):>3}"
-            display.lcd.DisplayProgressBar(
-                x=config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH'].get("X", 0),
-                y=config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH'].get("Y", 0),
-                width=config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH'].get("WIDTH", 0),
-                height=config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH'].get("HEIGHT", 0),
-                value=int(temp_text),
-                min_value=config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH'].get("MIN_VALUE", 0),
-                max_value=config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH'].get("MAX_VALUE", 100),
-                bar_color=config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH'].get("BAR_COLOR", (0, 0, 0)),
-                bar_outline=config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH'].get("BAR_OUTLINE", False),
-                background_color=config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH'].get("BACKGROUND_COLOR",
-                                                                                              (255, 255, 255)),
-                background_image=get_full_path(config.THEME_DATA['PATH'],
-                                               config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH'].get(
-                                                   "BACKGROUND_IMAGE",
-                                                   None))
-            )
+            if config.THEME_DATA['STATS']['GPU']['TEMPERATURE'].get("GRAPH", False):
+                if config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH'].get("SHOW", False):
+                    temp_text = f"{int(temperature):>3}"
+                    display.lcd.DisplayProgressBar(
+                        x=config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH'].get("X", 0),
+                        y=config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH'].get("Y", 0),
+                        width=config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH'].get("WIDTH", 0),
+                        height=config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH'].get("HEIGHT", 0),
+                        value=int(temp_text),
+                        min_value=config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH'].get("MIN_VALUE", 0),
+                        max_value=config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH'].get("MAX_VALUE", 100),
+                        bar_color=config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH'].get("BAR_COLOR", (0, 0, 0)),
+                        bar_outline=config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH'].get("BAR_OUTLINE", False),
+                        background_color=config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH'].get("BACKGROUND_COLOR",
+                                                                                                      (255, 255, 255)),
+                        background_image=get_full_path(config.THEME_DATA['PATH'],
+                                                       config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH'].get(
+                                                           "BACKGROUND_IMAGE",
+                                                           None))
+                    )
 
 
 class Gpu:
@@ -538,6 +543,131 @@ class Disk:
     def stats():
         used = sensors.Disk.disk_used()
         free = sensors.Disk.disk_free()
+        
+        if config.THEME_DATA['STATS'].get('DISKS', False):
+            for partition in config.THEME_DATA['STATS']['DISKS']:
+                #logger.debug(f"Partition: {partition}")
+                used = sensors.Disk.disk_used(config.THEME_DATA['STATS']['DISKS'][partition]['PARTITION'])
+                #logger.debug(f"Used: {used}")
+                free = sensors.Disk.disk_free(config.THEME_DATA['STATS']['DISKS'][partition]['PARTITION'])
+                #logger.debug(f"Free: {free}")
+                #logger.debug(f"Used %: {sensors.Disk.disk_usage_percent(config.THEME_DATA['STATS']['DISKS'][partition]['PARTITION'])}")
+
+                if config.THEME_DATA['STATS']['DISKS'][partition]['USED'].get("GRAPH", False):
+                    if config.THEME_DATA['STATS']['DISKS'][partition]['USED']['GRAPH'].get("SHOW", False):
+                        display.lcd.DisplayProgressBar(
+                            x=config.THEME_DATA['STATS']['DISKS'][partition]['USED']['GRAPH'].get("X", 0),
+                            y=config.THEME_DATA['STATS']['DISKS'][partition]['USED']['GRAPH'].get("Y", 0),
+                            width=config.THEME_DATA['STATS']['DISKS'][partition]['USED']['GRAPH'].get("WIDTH", 0),
+                            height=config.THEME_DATA['STATS']['DISKS'][partition]['USED']['GRAPH'].get("HEIGHT", 0),
+                            value=int(sensors.Disk.disk_usage_percent(config.THEME_DATA['STATS']['DISKS'][partition]['PARTITION'])),
+                            min_value=config.THEME_DATA['STATS']['DISKS'][partition]['USED']['GRAPH'].get("MIN_VALUE", 0),
+                            max_value=config.THEME_DATA['STATS']['DISKS'][partition]['USED']['GRAPH'].get("MAX_VALUE", 100),
+                            bar_color=config.THEME_DATA['STATS']['DISKS'][partition]['USED']['GRAPH'].get("BAR_COLOR", (0, 0, 0)),
+                            bar_outline=config.THEME_DATA['STATS']['DISKS'][partition]['USED']['GRAPH'].get("BAR_OUTLINE", False),
+                            background_color=config.THEME_DATA['STATS']['DISKS'][partition]['USED']['GRAPH'].get("BACKGROUND_COLOR",
+                                                                                                     (255, 255, 255)),
+                            background_image=get_full_path(config.THEME_DATA['PATH'],
+                                                           config.THEME_DATA['STATS']['DISKS'][partition]['USED']['GRAPH'].get(
+                                                               "BACKGROUND_IMAGE",
+                                                               None))
+                        )
+                if config.THEME_DATA['STATS']['DISKS'][partition]['USED'].get("TEXT", False):
+                    if config.THEME_DATA['STATS']['DISKS'][partition]['USED']['TEXT'].get("SHOW", False):
+                        used_text = f"{int(used / 1000000000):>5}"
+                        if config.THEME_DATA['STATS']['DISKS'][partition]['USED']['TEXT'].get("SHOW_UNIT", True):
+                            used_text += " G"
+            
+                        display.lcd.DisplayText(
+                            text=used_text,
+                            x=config.THEME_DATA['STATS']['DISKS'][partition]['USED']['TEXT'].get("X", 0),
+                            y=config.THEME_DATA['STATS']['DISKS'][partition]['USED']['TEXT'].get("Y", 0),
+                            font=config.THEME_DATA['STATS']['DISKS'][partition]['USED']['TEXT'].get("FONT",
+                                                                                        "roboto-mono/RobotoMono-Regular.ttf"),
+                            font_size=config.THEME_DATA['STATS']['DISKS'][partition]['USED']['TEXT'].get("FONT_SIZE", 10),
+                            font_color=config.THEME_DATA['STATS']['DISKS'][partition]['USED']['TEXT'].get("FONT_COLOR", (0, 0, 0)),
+                            background_color=config.THEME_DATA['STATS']['DISKS'][partition]['USED']['TEXT'].get("BACKGROUND_COLOR",
+                                                                                                    (255, 255, 255)),
+                            background_image=get_full_path(config.THEME_DATA['PATH'],
+                                                           config.THEME_DATA['STATS']['DISKS'][partition]['USED']['TEXT'].get(
+                                                               "BACKGROUND_IMAGE",
+                                                               None))
+                        )
+                        
+                if config.THEME_DATA['STATS']['DISKS'][partition]['USED'].get("PERCENT_TEXT", False):
+                    if config.THEME_DATA['STATS']['DISKS'][partition]['USED']['PERCENT_TEXT'].get("SHOW", False):
+                        percent_text = f"{int(sensors.Disk.disk_usage_percent(config.THEME_DATA['STATS']['DISKS'][partition]['PARTITION'])):>3}"
+                        if config.THEME_DATA['STATS']['DISKS'][partition]['USED']['PERCENT_TEXT'].get("SHOW_UNIT", True):
+                            percent_text += "%"
+            
+                        display.lcd.DisplayText(
+                            text=percent_text,
+                            x=config.THEME_DATA['STATS']['DISKS'][partition]['USED']['PERCENT_TEXT'].get("X", 0),
+                            y=config.THEME_DATA['STATS']['DISKS'][partition]['USED']['PERCENT_TEXT'].get("Y", 0),
+                            font=config.THEME_DATA['STATS']['DISKS'][partition]['USED']['PERCENT_TEXT'].get("FONT",
+                                                                                                "roboto-mono/RobotoMono-Regular.ttf"),
+                            font_size=config.THEME_DATA['STATS']['DISKS'][partition]['USED']['PERCENT_TEXT'].get("FONT_SIZE", 10),
+                            font_color=config.THEME_DATA['STATS']['DISKS'][partition]['USED']['PERCENT_TEXT'].get("FONT_COLOR", (0, 0, 0)),
+                            background_color=config.THEME_DATA['STATS']['DISKS'][partition]['USED']['PERCENT_TEXT'].get("BACKGROUND_COLOR",
+                                                                                                            (255, 255, 255)),
+                            background_image=get_full_path(config.THEME_DATA['PATH'],
+                                                           config.THEME_DATA['STATS']['DISKS'][partition]['USED']['PERCENT_TEXT'].get(
+                                                               "BACKGROUND_IMAGE",
+                                                               None))
+                        )
+                if config.THEME_DATA['STATS']['DISKS'][partition].get("TOTAL", False):
+                    if config.THEME_DATA['STATS']['DISKS'][partition]['TOTAL']['TEXT'].get("SHOW", False):
+                        total_text = f"{int((free + used) / 1000000000):>5}"
+                        if config.THEME_DATA['STATS']['DISKS'][partition]['TOTAL']['TEXT'].get("SHOW_UNIT", True):
+                            total_text += " G"
+            
+                        display.lcd.DisplayText(
+                            text=total_text,
+                            x=config.THEME_DATA['STATS']['DISKS'][partition]['TOTAL']['TEXT'].get("X", 0),
+                            y=config.THEME_DATA['STATS']['DISKS'][partition]['TOTAL']['TEXT'].get("Y", 0),
+                            font=config.THEME_DATA['STATS']['DISKS'][partition]['TOTAL']['TEXT'].get("FONT",
+                                                                                         "roboto-mono/RobotoMono-Regular.ttf"),
+                            font_size=config.THEME_DATA['STATS']['DISKS'][partition]['TOTAL']['TEXT'].get("FONT_SIZE", 10),
+                            font_color=config.THEME_DATA['STATS']['DISKS'][partition]['TOTAL']['TEXT'].get("FONT_COLOR", (0, 0, 0)),
+                            background_color=config.THEME_DATA['STATS']['DISKS'][partition]['TOTAL']['TEXT'].get("BACKGROUND_COLOR",
+                                                                                                     (255, 255, 255)),
+                            background_image=get_full_path(config.THEME_DATA['PATH'],
+                                                           config.THEME_DATA['STATS']['DISKS'][partition]['TOTAL']['TEXT'].get(
+                                                               "BACKGROUND_IMAGE",
+                                                               None))
+                        )
+                        
+                if config.THEME_DATA['STATS']['DISKS'][partition].get("FREE", False):
+                    if config.THEME_DATA['STATS']['DISKS'][partition]['FREE']['TEXT'].get("SHOW", False):
+                        free_text = f"{int(free / 1000000000):>5}"
+                        if config.THEME_DATA['STATS']['DISKS'][partition]['FREE']['TEXT'].get("SHOW_UNIT", True):
+                            free_text += " G"
+            
+                        display.lcd.DisplayText(
+                            text=free_text,
+                            x=config.THEME_DATA['STATS']['DISKS'][partition]['FREE']['TEXT'].get("X", 0),
+                            y=config.THEME_DATA['STATS']['DISKS'][partition]['FREE']['TEXT'].get("Y", 0),
+                            font=config.THEME_DATA['STATS']['DISKS'][partition]['FREE']['TEXT'].get("FONT",
+                                                                                        "roboto-mono/RobotoMono-Regular.ttf"),
+                            font_size=config.THEME_DATA['STATS']['DISKS'][partition]['FREE']['TEXT'].get("FONT_SIZE", 10),
+                            font_color=config.THEME_DATA['STATS']['DISKS'][partition]['FREE']['TEXT'].get("FONT_COLOR", (0, 0, 0)),
+                            background_color=config.THEME_DATA['STATS']['DISKS'][partition]['FREE']['TEXT'].get("BACKGROUND_COLOR",
+                                                                                                    (255, 255, 255)),
+                            background_image=get_full_path(config.THEME_DATA['PATH'],
+                                                           config.THEME_DATA['STATS']['DISKS'][partition]['FREE']['TEXT'].get(
+                                                               "BACKGROUND_IMAGE",
+                                                               None))
+                        )
+                
+                
+                
+                
+                
+                
+                
+                
+                
+        
         if config.THEME_DATA['STATS']['DISK']['USED']['GRAPH'].get("SHOW", False):
             display.lcd.DisplayProgressBar(
                 x=config.THEME_DATA['STATS']['DISK']['USED']['GRAPH'].get("X", 0),
