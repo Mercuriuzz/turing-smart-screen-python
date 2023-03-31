@@ -74,6 +74,27 @@ def get_full_path(path, name):
     else:
         return None
 
+def format_number(num, decimals = "AUTO", align = "RIGHT", length = 4) -> str:
+
+    if isinstance(decimals, str) and decimals.upper() == "AUTO":   # 0.12, 9.87, 12.3, 100
+        if num == 0:
+            string = "0"
+        else:
+            digits = len(str(int(num)))
+            precision = length - 1 - digits
+            if precision < 0:
+                precision = 0
+            string = f"{num:.{precision}f}"
+    else:
+        string = f"{num:.{decimals}f}"
+
+    if align.upper() == "CENTER":
+        return string.center(length)
+    elif align.upper() == "LEFT":
+        return string.ljust(length)
+    else:
+        return string.rjust(length)
+
 
 class CPU:
     @staticmethod
@@ -84,7 +105,11 @@ class CPU:
 
         if config.THEME_DATA['STATS']['CPU']['PERCENTAGE']['TEXT'].get("SHOW", False):
 
-            cpu_percentage_text = f"{int(cpu_percentage):>3}"
+            cpu_percentage_text = format_number(cpu_percentage,
+                                                config.THEME_DATA['STATS']['CPU']['PERCENTAGE']['TEXT'].get("DECIMALS", "AUTO"),
+                                                config.THEME_DATA['STATS']['CPU']['PERCENTAGE']['TEXT'].get("ALIGN", "RIGHT"),
+                                                config.THEME_DATA['STATS']['CPU']['PERCENTAGE']['TEXT'].get("TEXT_LENGTH", 4)
+                                  )
             if config.THEME_DATA['STATS']['CPU']['PERCENTAGE']['TEXT'].get("SHOW_UNIT", True):
                 cpu_percentage_text += "%"
 
@@ -127,7 +152,11 @@ class CPU:
     def frequency():
         if config.THEME_DATA['STATS']['CPU']['FREQUENCY']['TEXT'].get("SHOW", False):
 
-            cpu_freq = f'{sensors.Cpu.frequency() / 1000:.2f}'
+            cpu_freq = format_number(sensors.Cpu.frequency() / 1000,
+                                     config.THEME_DATA['STATS']['CPU']['FREQUENCY']['TEXT'].get("DECIMALS", 2),
+                                     config.THEME_DATA['STATS']['CPU']['FREQUENCY']['TEXT'].get("ALIGN", "RIGHT"),
+                                     config.THEME_DATA['STATS']['CPU']['FREQUENCY']['TEXT'].get("TEXT_LENGTH", 4)
+                                    )
             if config.THEME_DATA['STATS']['CPU']['FREQUENCY']['TEXT'].get("SHOW_UNIT", True):
                 cpu_freq += " GHz"
 
@@ -154,7 +183,11 @@ class CPU:
 
         if config.THEME_DATA['STATS']['CPU']['LOAD']['ONE']['TEXT'].get("SHOW", False):
 
-            cpu_load_one = f"{int(cpu_load[0]):>3}"
+            cpu_load_one = format_number(cpu_load[0],
+                                         config.THEME_DATA['STATS']['CPU']['LOAD']['ONE']['TEXT'].get("DECIMALS", "AUTO"),
+                                         config.THEME_DATA['STATS']['CPU']['LOAD']['ONE']['TEXT'].get("ALIGN", "RIGHT"),
+                                         config.THEME_DATA['STATS']['CPU']['LOAD']['ONE']['TEXT'].get("TEXT_LENGTH", 4)
+                                        )
             if config.THEME_DATA['STATS']['CPU']['LOAD']['ONE']['TEXT'].get("SHOW_UNIT", True):
                 cpu_load_one += "%"
 
@@ -176,7 +209,11 @@ class CPU:
 
         if config.THEME_DATA['STATS']['CPU']['LOAD']['FIVE']['TEXT'].get("SHOW", False):
 
-            cpu_load_five = f"{int(cpu_load[1]):>3}"
+            cpu_load_five = format_number(cpu_load[1],
+                                          config.THEME_DATA['STATS']['CPU']['LOAD']['FIVE']['TEXT'].get("DECIMALS", "AUTO"),
+                                          config.THEME_DATA['STATS']['CPU']['LOAD']['FIVE']['TEXT'].get("ALIGN", "RIGHT"),
+                                          config.THEME_DATA['STATS']['CPU']['LOAD']['FIVE']['TEXT'].get("TEXT_LENGTH", 4)
+                                         )
             if config.THEME_DATA['STATS']['CPU']['LOAD']['FIVE']['TEXT'].get("SHOW_UNIT", True):
                 cpu_load_five += "%"
 
@@ -197,7 +234,11 @@ class CPU:
 
         if config.THEME_DATA['STATS']['CPU']['LOAD']['FIFTEEN']['TEXT'].get("SHOW", False):
 
-            cpu_load_fifteen = f"{int(cpu_load[2]):>3}"
+            cpu_load_fifteen = format_number(cpu_load[2],
+                                             config.THEME_DATA['STATS']['CPU']['LOAD']['FIFTEEN']['TEXT'].get("DECIMALS", "AUTO"),
+                                             config.THEME_DATA['STATS']['CPU']['LOAD']['FIFTEEN']['TEXT'].get("ALIGN", "RIGHT"),
+                                             config.THEME_DATA['STATS']['CPU']['LOAD']['FIFTEEN']['TEXT'].get("TEXT_LENGTH", 4)
+                                            )
             if config.THEME_DATA['STATS']['CPU']['LOAD']['FIFTEEN']['TEXT'].get("SHOW_UNIT", True):
                 cpu_load_fifteen += "%"
 
@@ -224,7 +265,12 @@ class CPU:
     def temperature():
         if config.THEME_DATA['STATS']['CPU']['TEMPERATURE']['TEXT'].get("SHOW", False):
 
-            cpu_temp = f"{int(sensors.Cpu.temperature()):>3}"
+            cpu_temp = format_number(sensors.Cpu.temperature(),
+                                     config.THEME_DATA['STATS']['CPU']['TEMPERATURE']['TEXT'].get("DECIMALS", 0),
+                                     config.THEME_DATA['STATS']['CPU']['TEMPERATURE']['TEXT'].get("ALIGN", "RIGHT"),
+                                     config.THEME_DATA['STATS']['CPU']['TEMPERATURE']['TEXT'].get("TEXT_LENGTH", 3)
+                                    )
+
             if config.THEME_DATA['STATS']['CPU']['TEMPERATURE']['TEXT'].get("SHOW_UNIT", True):
                 cpu_temp += "°C"
 
@@ -246,13 +292,12 @@ class CPU:
 
         if config.THEME_DATA['STATS']['CPU']['TEMPERATURE']['GRAPH'].get("SHOW", False):
 
-            cpu_temp = f"{int(sensors.Cpu.temperature()):>3}"
             display.lcd.DisplayProgressBar(
                 x=config.THEME_DATA['STATS']['CPU']['TEMPERATURE']['GRAPH'].get("X", 0),
                 y=config.THEME_DATA['STATS']['CPU']['TEMPERATURE']['GRAPH'].get("Y", 0),
                 width=config.THEME_DATA['STATS']['CPU']['TEMPERATURE']['GRAPH'].get("WIDTH", 0),
                 height=config.THEME_DATA['STATS']['CPU']['TEMPERATURE']['GRAPH'].get("HEIGHT", 0),
-                value=int(cpu_temp),
+                value=int(sensors.Cpu.temperature()),
                 min_value=config.THEME_DATA['STATS']['CPU']['TEMPERATURE']['GRAPH'].get("MIN_VALUE", 0),
                 max_value=config.THEME_DATA['STATS']['CPU']['TEMPERATURE']['GRAPH'].get("MAX_VALUE", 100),
                 bar_color=config.THEME_DATA['STATS']['CPU']['TEMPERATURE']['GRAPH'].get("BAR_COLOR", (0, 0, 0)),
@@ -297,7 +342,11 @@ def display_gpu_stats(load, memory_percentage, memory_used_mb, temperature):
             config.THEME_DATA['STATS']['GPU']['PERCENTAGE']['GRAPH']['SHOW'] = False
             config.THEME_DATA['STATS']['GPU']['PERCENTAGE']['TEXT']['SHOW'] = False
         else:
-            load_text = f"{int(load):>3}"
+            load_text = format_number(load,
+                                      config.THEME_DATA['STATS']['GPU']['PERCENTAGE']['TEXT'].get("DECIMALS", "AUTO"),
+                                      config.THEME_DATA['STATS']['GPU']['PERCENTAGE']['TEXT'].get("ALIGN", "RIGHT"),
+                                      config.THEME_DATA['STATS']['GPU']['PERCENTAGE']['TEXT'].get("TEXT_LENGTH", 4)
+                                     )
             if config.THEME_DATA['STATS']['GPU']['PERCENTAGE']['TEXT'].get("SHOW_UNIT", True):
                 load_text += "%"
 
@@ -345,12 +394,21 @@ def display_gpu_stats(load, memory_percentage, memory_used_mb, temperature):
             logger.warning("Your GPU memory absolute usage (M) is not supported yet")
             config.THEME_DATA['STATS']['GPU']['MEMORY']['TEXT']['SHOW'] = False
         else:
-            mem_used_text = f"{int(memory_used_mb):>5}"
-            if config.THEME_DATA['STATS']['GPU']['MEMORY']['TEXT'].get("SHOW_UNIT", True):
-                if config.THEME_DATA['STATS']['GPU']['MEMORY']['TEXT'].get("UNIT", "M") == "M":
+            if config.THEME_DATA['STATS']['GPU']['MEMORY']['TEXT'].get("UNIT", "M") == "M":
+                mem_used_text = format_number(memory_used_mb,
+                                              config.THEME_DATA['STATS']['GPU']['MEMORY']['TEXT'].get("DECIMALS", 0),
+                                              config.THEME_DATA['STATS']['GPU']['MEMORY']['TEXT'].get("ALIGN", "RIGHT"),
+                                              config.THEME_DATA['STATS']['GPU']['MEMORY']['TEXT'].get("TEXT_LENGTH", 5)
+                                             )
+                if config.THEME_DATA['STATS']['GPU']['MEMORY']['TEXT'].get("SHOW_UNIT", True):
                     mem_used_text += " M"
-                else:
-                    mem_used_text = f"{int(memory_used_mb/1000):>3}"
+            else:
+                mem_used_text = format_number(memory_used_mb/1000,
+                                              config.THEME_DATA['STATS']['GPU']['MEMORY']['TEXT'].get("DECIMALS", "AUTO"),
+                                              config.THEME_DATA['STATS']['GPU']['MEMORY']['TEXT'].get("ALIGN", "RIGHT"),
+                                              config.THEME_DATA['STATS']['GPU']['MEMORY']['TEXT'].get("TEXT_LENGTH", 4)
+                                             )
+                if config.THEME_DATA['STATS']['GPU']['MEMORY']['TEXT'].get("SHOW_UNIT", True):
                     mem_used_text += " G"
 
 
@@ -376,6 +434,11 @@ def display_gpu_stats(load, memory_percentage, memory_used_mb, temperature):
             config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['TEXT']['SHOW'] = False
         else:
             temp_text = f"{int(temperature):>3}"
+            temp_text = format_number(temperature,
+                                      config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['TEXT'].get("DECIMALS", 0),
+                                      config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['TEXT'].get("ALIGN", "RIGHT"),
+                                      config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['TEXT'].get("TEXT_LENGTH", 3)
+                                     )
             if config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['TEXT'].get("SHOW_UNIT", True):
                 temp_text += "°C"
 
@@ -394,16 +457,15 @@ def display_gpu_stats(load, memory_percentage, memory_used_mb, temperature):
                                                    "BACKGROUND_IMAGE",
                                                    None))
             )
-            
+
             if config.THEME_DATA['STATS']['GPU']['TEMPERATURE'].get("GRAPH", False):
                 if config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH'].get("SHOW", False):
-                    temp_text = f"{int(temperature):>3}"
                     display.lcd.DisplayProgressBar(
                         x=config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH'].get("X", 0),
                         y=config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH'].get("Y", 0),
                         width=config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH'].get("WIDTH", 0),
                         height=config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH'].get("HEIGHT", 0),
-                        value=int(temp_text),
+                        value=int(temperature),
                         min_value=config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH'].get("MIN_VALUE", 0),
                         max_value=config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH'].get("MAX_VALUE", 100),
                         bar_color=config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH'].get("BAR_COLOR", (0, 0, 0)),
@@ -474,7 +536,12 @@ class Memory:
             )
 
         if config.THEME_DATA['STATS']['MEMORY']['VIRTUAL']['PERCENT_TEXT'].get("SHOW", False):
-            virtual_percent_text = f"{int(virtual_percent):>3}"
+            virtual_percent_text = format_number(virtual_percent,
+                                                 config.THEME_DATA['STATS']['MEMORY']['VIRTUAL']['PERCENT_TEXT'].get("DECIMALS", "AUTO"),
+                                                 config.THEME_DATA['STATS']['MEMORY']['VIRTUAL']['PERCENT_TEXT'].get("ALIGN", "RIGHT"),
+                                                 config.THEME_DATA['STATS']['MEMORY']['VIRTUAL']['PERCENT_TEXT'].get("TEXT_LENGTH", 4)
+                                                )
+
             if config.THEME_DATA['STATS']['MEMORY']['VIRTUAL']['PERCENT_TEXT'].get("SHOW_UNIT", True):
                 virtual_percent_text += "%"
 
@@ -496,9 +563,22 @@ class Memory:
         if config.THEME_DATA['STATS']['MEMORY']['VIRTUAL']['USED'].get("SHOW", False):
             virtual_used = sensors.Memory.virtual_used()
 
-            virtual_used_text = f"{int(virtual_used / 1000000):>5}"
-            if config.THEME_DATA['STATS']['MEMORY']['VIRTUAL']['USED'].get("SHOW_UNIT", True):
-                virtual_used_text += " M"
+            if config.THEME_DATA['STATS']['MEMORY']['VIRTUAL']['USED'].get("UNIT", "M") == "M":
+                virtual_used_text = format_number(virtual_used / 1000000,
+                                                  config.THEME_DATA['STATS']['MEMORY']['VIRTUAL']['USED'].get("DECIMALS", 0),
+                                                  config.THEME_DATA['STATS']['MEMORY']['VIRTUAL']['USED'].get("ALIGN", "RIGHT"),
+                                                  config.THEME_DATA['STATS']['MEMORY']['VIRTUAL']['USED'].get("TEXT_LENGTH", 5)
+                                                 )
+                if config.THEME_DATA['STATS']['MEMORY']['VIRTUAL']['USED'].get("SHOW_UNIT", True):
+                    virtual_used_text += " M"
+            else:
+                virtual_used_text = format_number(virtual_used / 1000000 / 1000,
+                                                  config.THEME_DATA['STATS']['MEMORY']['VIRTUAL']['USED'].get("DECIMALS", "AUTO"),
+                                                  config.THEME_DATA['STATS']['MEMORY']['VIRTUAL']['USED'].get("ALIGN", "RIGHT"),
+                                                  config.THEME_DATA['STATS']['MEMORY']['VIRTUAL']['USED'].get("TEXT_LENGTH", 4)
+                                                 )
+                if config.THEME_DATA['STATS']['MEMORY']['VIRTUAL']['USED'].get("SHOW_UNIT", True):
+                    virtual_used_text += " G"
 
             display.lcd.DisplayText(
                 text=virtual_used_text,
@@ -518,9 +598,22 @@ class Memory:
         if config.THEME_DATA['STATS']['MEMORY']['VIRTUAL']['FREE'].get("SHOW", False):
             virtual_free = sensors.Memory.virtual_free()
 
-            virtual_free_text = f"{int(virtual_free / 1000000):>5}"
-            if config.THEME_DATA['STATS']['MEMORY']['VIRTUAL']['FREE'].get("SHOW_UNIT", True):
-                virtual_free_text += " M"
+            if config.THEME_DATA['STATS']['MEMORY']['VIRTUAL']['FREE'].get("UNIT", "M") == "M":
+                virtual_free_text = format_number(virtual_free / 1000000,
+                                                  config.THEME_DATA['STATS']['MEMORY']['VIRTUAL']['FREE'].get("DECIMALS", 0),
+                                                  config.THEME_DATA['STATS']['MEMORY']['VIRTUAL']['FREE'].get("ALIGN", "RIGHT"),
+                                                  config.THEME_DATA['STATS']['MEMORY']['VIRTUAL']['FREE'].get("TEXT_LENGTH", 5)
+                                                 )
+                if config.THEME_DATA['STATS']['MEMORY']['VIRTUAL']['FREE'].get("SHOW_UNIT", True):
+                    virtual_free_text += " M"
+            else:
+                virtual_free_text = format_number(virtual_free / 1000000 / 1000,
+                                                  config.THEME_DATA['STATS']['MEMORY']['VIRTUAL']['FREE'].get("DECIMALS", "AUTO"),
+                                                  config.THEME_DATA['STATS']['MEMORY']['VIRTUAL']['FREE'].get("ALIGN", "RIGHT"),
+                                                  config.THEME_DATA['STATS']['MEMORY']['VIRTUAL']['FREE'].get("TEXT_LENGTH", 4)
+                                                 )
+                if config.THEME_DATA['STATS']['MEMORY']['VIRTUAL']['FREE'].get("SHOW_UNIT", True):
+                    virtual_free_text += " G"
 
             display.lcd.DisplayText(
                 text=virtual_free_text,
@@ -543,15 +636,13 @@ class Disk:
     def stats():
         used = sensors.Disk.disk_used()
         free = sensors.Disk.disk_free()
-        
+
         if config.THEME_DATA['STATS'].get('DISKS', False):
             for partition in config.THEME_DATA['STATS']['DISKS']:
-                #logger.debug(f"Partition: {partition}")
+
                 used = sensors.Disk.disk_used(config.THEME_DATA['STATS']['DISKS'][partition]['PARTITION'])
-                #logger.debug(f"Used: {used}")
                 free = sensors.Disk.disk_free(config.THEME_DATA['STATS']['DISKS'][partition]['PARTITION'])
-                #logger.debug(f"Free: {free}")
-                #logger.debug(f"Used %: {sensors.Disk.disk_usage_percent(config.THEME_DATA['STATS']['DISKS'][partition]['PARTITION'])}")
+
 
                 if config.THEME_DATA['STATS']['DISKS'][partition]['USED'].get("GRAPH", False):
                     if config.THEME_DATA['STATS']['DISKS'][partition]['USED']['GRAPH'].get("SHOW", False):
@@ -572,12 +663,27 @@ class Disk:
                                                                "BACKGROUND_IMAGE",
                                                                None))
                         )
+
                 if config.THEME_DATA['STATS']['DISKS'][partition]['USED'].get("TEXT", False):
                     if config.THEME_DATA['STATS']['DISKS'][partition]['USED']['TEXT'].get("SHOW", False):
-                        used_text = f"{int(used / 1000000000):>5}"
-                        if config.THEME_DATA['STATS']['DISKS'][partition]['USED']['TEXT'].get("SHOW_UNIT", True):
-                            used_text += " G"
-            
+
+                        if config.THEME_DATA['STATS']['DISKS'][partition]['USED']['TEXT'].get("UNIT", "G") == "M":
+                            used_text = format_number(used / 1000000,
+                                                      config.THEME_DATA['STATS']['DISKS'][partition]['USED']['TEXT'].get("DECIMALS", "AUTO"),
+                                                      config.THEME_DATA['STATS']['DISKS'][partition]['USED']['TEXT'].get("ALIGN", "RIGHT"),
+                                                      config.THEME_DATA['STATS']['DISKS'][partition]['USED']['TEXT'].get("TEXT_LENGTH", 5)
+                                                     )
+                            if config.THEME_DATA['STATS']['DISKS'][partition]['USED']['TEXT'].get("SHOW_UNIT", True):
+                                used_text += " M"
+                        else:
+                            used_text = format_number(used / 1000000 / 1000,
+                                                      config.THEME_DATA['STATS']['DISKS'][partition]['USED']['TEXT'].get("DECIMALS", "AUTO"),
+                                                      config.THEME_DATA['STATS']['DISKS'][partition]['USED']['TEXT'].get("ALIGN", "RIGHT"),
+                                                      config.THEME_DATA['STATS']['DISKS'][partition]['USED']['TEXT'].get("TEXT_LENGTH", 5)
+                                                     )
+                            if config.THEME_DATA['STATS']['DISKS'][partition]['USED']['TEXT'].get("SHOW_UNIT", True):
+                                used_text += " G"
+
                         display.lcd.DisplayText(
                             text=used_text,
                             x=config.THEME_DATA['STATS']['DISKS'][partition]['USED']['TEXT'].get("X", 0),
@@ -593,13 +699,19 @@ class Disk:
                                                                "BACKGROUND_IMAGE",
                                                                None))
                         )
-                        
+
                 if config.THEME_DATA['STATS']['DISKS'][partition]['USED'].get("PERCENT_TEXT", False):
                     if config.THEME_DATA['STATS']['DISKS'][partition]['USED']['PERCENT_TEXT'].get("SHOW", False):
-                        percent_text = f"{int(sensors.Disk.disk_usage_percent(config.THEME_DATA['STATS']['DISKS'][partition]['PARTITION'])):>3}"
+
+                        percent_text = format_number(sensors.Disk.disk_usage_percent(config.THEME_DATA['STATS']['DISKS'][partition]['PARTITION']),
+                                                     config.THEME_DATA['STATS']['DISKS'][partition]['USED']['PERCENT_TEXT'].get("DECIMALS", "AUTO"),
+                                                     config.THEME_DATA['STATS']['DISKS'][partition]['USED']['PERCENT_TEXT'].get("ALIGN", "RIGHT"),
+                                                     config.THEME_DATA['STATS']['DISKS'][partition]['USED']['PERCENT_TEXT'].get("TEXT_LENGTH", 4)
+                                                    )
+
                         if config.THEME_DATA['STATS']['DISKS'][partition]['USED']['PERCENT_TEXT'].get("SHOW_UNIT", True):
                             percent_text += "%"
-            
+
                         display.lcd.DisplayText(
                             text=percent_text,
                             x=config.THEME_DATA['STATS']['DISKS'][partition]['USED']['PERCENT_TEXT'].get("X", 0),
@@ -617,10 +729,24 @@ class Disk:
                         )
                 if config.THEME_DATA['STATS']['DISKS'][partition].get("TOTAL", False):
                     if config.THEME_DATA['STATS']['DISKS'][partition]['TOTAL']['TEXT'].get("SHOW", False):
-                        total_text = f"{int((free + used) / 1000000000):>5}"
-                        if config.THEME_DATA['STATS']['DISKS'][partition]['TOTAL']['TEXT'].get("SHOW_UNIT", True):
-                            total_text += " G"
-            
+
+                        if config.THEME_DATA['STATS']['DISKS'][partition]['TOTAL']['TEXT'].get("UNIT", "G") == "M":
+                            total_text = format_number((free + used) / 1000000,
+                                                       config.THEME_DATA['STATS']['DISKS'][partition]['TOTAL']['TEXT'].get("DECIMALS", "AUTO"),
+                                                       config.THEME_DATA['STATS']['DISKS'][partition]['TOTAL']['TEXT'].get("ALIGN", "RIGHT"),
+                                                       config.THEME_DATA['STATS']['DISKS'][partition]['TOTAL']['TEXT'].get("TEXT_LENGTH", 5)
+                                                      )
+                            if config.THEME_DATA['STATS']['DISKS'][partition]['TOTAL']['TEXT'].get("SHOW_UNIT", True):
+                                total_text += " M"
+                        else:
+                            total_text = format_number((free + used) / 1000000 / 1000,
+                                                       config.THEME_DATA['STATS']['DISKS'][partition]['TOTAL']['TEXT'].get("DECIMALS", "AUTO"),
+                                                       config.THEME_DATA['STATS']['DISKS'][partition]['TOTAL']['TEXT'].get("ALIGN", "RIGHT"),
+                                                       config.THEME_DATA['STATS']['DISKS'][partition]['TOTAL']['TEXT'].get("TEXT_LENGTH", 5)
+                                                      )
+                            if config.THEME_DATA['STATS']['DISKS'][partition]['TOTAL']['TEXT'].get("SHOW_UNIT", True):
+                                total_text += " G"
+
                         display.lcd.DisplayText(
                             text=total_text,
                             x=config.THEME_DATA['STATS']['DISKS'][partition]['TOTAL']['TEXT'].get("X", 0),
@@ -636,13 +762,27 @@ class Disk:
                                                                "BACKGROUND_IMAGE",
                                                                None))
                         )
-                        
+
                 if config.THEME_DATA['STATS']['DISKS'][partition].get("FREE", False):
                     if config.THEME_DATA['STATS']['DISKS'][partition]['FREE']['TEXT'].get("SHOW", False):
-                        free_text = f"{int(free / 1000000000):>5}"
-                        if config.THEME_DATA['STATS']['DISKS'][partition]['FREE']['TEXT'].get("SHOW_UNIT", True):
-                            free_text += " G"
-            
+
+                        if config.THEME_DATA['STATS']['DISKS'][partition]['FREE']['TEXT'].get("UNIT", "G") == "M":
+                            free_text = format_number(free / 1000000,
+                                                      config.THEME_DATA['STATS']['DISKS'][partition]['FREE']['TEXT'].get("DECIMALS", "AUTO"),
+                                                      config.THEME_DATA['STATS']['DISKS'][partition]['FREE']['TEXT'].get("ALIGN", "RIGHT"),
+                                                      config.THEME_DATA['STATS']['DISKS'][partition]['FREE']['TEXT'].get("TEXT_LENGTH", 5)
+                                                     )
+                            if config.THEME_DATA['STATS']['DISKS'][partition]['FREE']['TEXT'].get("SHOW_UNIT", True):
+                                free_text += " M"
+                        else:
+                            free_text = format_number(free / 1000000 / 1000,
+                                                      config.THEME_DATA['STATS']['DISKS'][partition]['FREE']['TEXT'].get("DECIMALS", "AUTO"),
+                                                      config.THEME_DATA['STATS']['DISKS'][partition]['FREE']['TEXT'].get("ALIGN", "RIGHT"),
+                                                      config.THEME_DATA['STATS']['DISKS'][partition]['FREE']['TEXT'].get("TEXT_LENGTH", 5)
+                                                     )
+                            if config.THEME_DATA['STATS']['DISKS'][partition]['FREE']['TEXT'].get("SHOW_UNIT", True):
+                                free_text += " G"
+
                         display.lcd.DisplayText(
                             text=free_text,
                             x=config.THEME_DATA['STATS']['DISKS'][partition]['FREE']['TEXT'].get("X", 0),
@@ -658,16 +798,11 @@ class Disk:
                                                                "BACKGROUND_IMAGE",
                                                                None))
                         )
-                
-                
-                
-                
-                
-                
-                
-                
-                
-        
+
+
+
+
+
         if config.THEME_DATA['STATS']['DISK']['USED']['GRAPH'].get("SHOW", False):
             display.lcd.DisplayProgressBar(
                 x=config.THEME_DATA['STATS']['DISK']['USED']['GRAPH'].get("X", 0),
