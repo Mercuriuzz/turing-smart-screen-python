@@ -6,12 +6,14 @@ STATS:
       INTERVAL: 1
       TEXT:
         SHOW: False
+        UNIT_SPACE: False
       GRAPH:
         SHOW: False
     FREQUENCY:
       INTERVAL: 5
       TEXT:
         SHOW: False
+        DECIMALS: 2
     LOAD:
       INTERVAL: 5
       ONE:
@@ -27,6 +29,9 @@ STATS:
       INTERVAL: 5
       TEXT:
         SHOW: False
+        UNIT_SPACE: False
+      GRAPH:
+        SHOW: False
   GPU:
     INTERVAL: 1
     PERCENTAGE:
@@ -34,19 +39,28 @@ STATS:
         SHOW: False
       TEXT:
         SHOW: False
+        UNIT_SPACE: False
     MEMORY:
       GRAPH:
         SHOW: False
       TEXT:
         SHOW: False
         SHOW_UNIT: False
+        TEXT_LENGTH: 5
     TEMPERATURE:
       TEXT:
         SHOW: False
         SHOW_UNIT: False
+        UNIT_SPACE: False
+      GRAPH:
+        SHOW: False
   MEMORY:
     INTERVAL: 5
     SWAP:
+      PERCENT_TEXT:
+        SHOW: False
+        SHOW_UNIT: False
+        UNIT_SPACE: False
       GRAPH:
         SHOW: False
     VIRTUAL:
@@ -55,9 +69,13 @@ STATS:
       USED:
         SHOW: False
         SHOW_UNIT: False
+        TEXT_LENGTH: 5
+        UNIT: M
       FREE:
         SHOW: False
         SHOW_UNIT: False
+        TEXT_LENGTH: 5
+        UNIT: M
       PERCENT_TEXT:
         SHOW: False
         SHOW_UNIT: False
@@ -69,45 +87,97 @@ STATS:
       TEXT:
         SHOW: False
         SHOW_UNIT: False
+        TEXT_LENGTH: 5
       PERCENT_TEXT:
         SHOW: False
         SHOW_UNIT: False
+        UNIT_SPACE: False
     TOTAL:
       TEXT:
         SHOW: False
         SHOW_UNIT: False
+        TEXT_LENGTH: 5
     FREE:
       TEXT:
         SHOW: False
         SHOW_UNIT: False
+        TEXT_LENGTH: 5
+  DISKS:
+    PARTITION1:
+      PARTITION: /
+      USED:
+        GRAPH:
+          SHOW: False
+        TEXT:
+          SHOW: False
+          SHOW_UNIT: False
+          TEXT_LENGTH: 5
+        PERCENT_TEXT:
+          SHOW: False
+          SHOW_UNIT: False
+          UNIT_SPACE: False
+      TOTAL:
+        TEXT:
+          SHOW: False
+          SHOW_UNIT: False
+          TEXT_LENGTH: 5
+      FREE:
+        TEXT:
+          SHOW: False
+          SHOW_UNIT: False
+          TEXT_LENGTH: 5
   NET:
     INTERVAL: 1
     WLO:
       UPLOAD:
         TEXT:
           SHOW: False
+          SHOW_UNIT: True
+          TEXT_LENGTH: 6
+          DECIMALS: 1
       UPLOADED:
         TEXT:
           SHOW: False
+          SHOW_UNIT: True
+          TEXT_LENGTH: 4
+          DECIMALS: AUTO
       DOWNLOAD:
         TEXT:
           SHOW: False
+          SHOW_UNIT: True
+          TEXT_LENGTH: 6
+          DECIMALS: 1
       DOWNLOADED:
         TEXT:
           SHOW: False
+          SHOW_UNIT: True
+          TEXT_LENGTH: 4
+          DECIMALS: AUTO
     ETH:
       UPLOAD:
         TEXT:
           SHOW: False
+          SHOW_UNIT: True
+          TEXT_LENGTH: 6
+          DECIMALS: 1
       UPLOADED:
         TEXT:
           SHOW: False
+          SHOW_UNIT: True
+          TEXT_LENGTH: 4
+          DECIMALS: AUTO
       DOWNLOAD:
         TEXT:
           SHOW: False
+          SHOW_UNIT: True
+          TEXT_LENGTH: 6
+          DECIMALS: 1
       DOWNLOADED:
         TEXT:
           SHOW: False
+          SHOW_UNIT: True
+          TEXT_LENGTH: 4
+          DECIMALS: AUTO
   DATE:
     INTERVAL: 1
     DAY:

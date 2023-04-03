@@ -28,7 +28,7 @@ import platform
 import sys
 
 import babel.dates
-from psutil._common import bytes2human
+#from psutil._common import bytes2human
 
 import library.config as config
 from library.display import display
@@ -74,8 +74,31 @@ def get_full_path(path, name):
     else:
         return None
 
-def format_number(num, decimals = "AUTO", align = "RIGHT", length = 4) -> str:
+def format_number(num, sectionConfig, unit, bytes = False) -> str:
 
+    decimals      = sectionConfig.get("DECIMALS", 0)
+    align         = sectionConfig.get("ALIGN", "LEFT")
+    length        = sectionConfig.get("TEXT_LENGTH", 3)
+    unit_space    = sectionConfig.get("UNIT_SPACE", True)
+    show_unit     = sectionConfig.get("SHOW_UNIT", False)
+    unit_override = sectionConfig.get("UNIT", False)
+    symbol        = ""
+
+
+    if bytes:
+        symbols = ('B', 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
+        prefix = {}
+        for i, s in enumerate(symbols[1:]):
+            prefix[s] = 1 << (i + 1) * 10
+        if bytes and unit_override:
+            num = num / prefix[unit_override]
+            symbol = unit_override
+        else:
+            for symbol in reversed(symbols[1:]):
+                if num >= prefix[symbol]:
+                    num = num / prefix[symbol]
+                    break
+            
     if isinstance(decimals, str) and decimals.upper() == "AUTO":   # 0.12, 9.87, 12.3, 100
         if num == 0:
             string = "0"
@@ -88,12 +111,77 @@ def format_number(num, decimals = "AUTO", align = "RIGHT", length = 4) -> str:
     else:
         string = f"{num:.{decimals}f}"
 
-    if align.upper() == "CENTER":
-        return string.center(length)
-    elif align.upper() == "LEFT":
-        return string.ljust(length)
+    if show_unit:
+        string += (" " if unit_space else "") + symbol + unit
+
+    if show_unit and bytes:
+        unit_len = len(str(symbol)) + len(str(unit))
+    elif show_unit:
+        unit_len = len(str(unit))
     else:
-        return string.rjust(length)
+        unit_len = 0
+    if show_unit and unit_space:
+        unit_len += 1
+        
+    if align.upper() == "CENTER":
+        string = string.center(length + unit_len)
+    elif align.upper() == "LEFT":
+        string = string.rjust(length + unit_len)
+    else:
+        string = string.rjust(length)
+    
+    return string
+    
+def text_factory(text, value, sectionConfig):
+    
+    tempConfig = sectionConfig.copy()
+    
+    if tempConfig.get("TRESHOLD", False):
+        if value >= tempConfig['TRESHOLD'].get("VALUE", 0):
+            for key in tempConfig['TRESHOLD']:
+                if key == 'VALUE':
+                    continue
+                tempConfig[key] = tempConfig['TRESHOLD'][key]
+    
+    display.lcd.DisplayText(
+        text=text,
+        x=tempConfig.get("X", 0),
+        y=tempConfig.get("Y", 0),
+        font=tempConfig.get("FONT", config.THEME_DEFAULTS['FONT']),
+        font_size=tempConfig.get("FONT_SIZE", config.THEME_DEFAULTS['FONT_SIZE']),
+        font_color=tempConfig.get("FONT_COLOR", config.THEME_DEFAULTS['FONT_COLOR']),
+        background_color=tempConfig.get("BACKGROUND_COLOR", config.THEME_DEFAULTS['TEXT_BACKGROUND_COLOR']),
+        background_image=get_full_path(config.THEME_DATA['PATH'], tempConfig.get("BACKGROUND_IMAGE", config.THEME_DEFAULTS['TEXT_BACKGROUND_IMAGE']))
+    )
+    
+    del tempConfig
+
+def bar_factory(value, sectionConfig):
+    
+    tempConfig = sectionConfig.copy()
+    
+    if tempConfig.get("TRESHOLD", False):
+        if value >= tempConfig['TRESHOLD'].get("VALUE", 0):
+            for key in tempConfig['TRESHOLD']:
+                if key == 'VALUE':
+                    continue
+                tempConfig[key] = tempConfig['TRESHOLD'][key]
+    
+    display.lcd.DisplayProgressBar(
+        x=tempConfig.get("X", 0),
+        y=tempConfig.get("Y", 0),
+        width=tempConfig.get("WIDTH", 0),
+        height=tempConfig.get("HEIGHT", 0),
+        value=int(value),
+        min_value=tempConfig.get("MIN_VALUE", 0),
+        max_value=tempConfig.get("MAX_VALUE", 100),
+        bar_color=tempConfig.get("BAR_COLOR", config.THEME_DEFAULTS['BAR_COLOR']),
+        bar_outline=tempConfig.get("BAR_OUTLINE", config.THEME_DEFAULTS['BAR_OUTLINE']),
+        background_color=tempConfig.get("BACKGROUND_COLOR", config.THEME_DEFAULTS['BAR_BACKGROUND_COLOR']),
+        background_image=get_full_path(config.THEME_DATA['PATH'], tempConfig.get("BACKGROUND_IMAGE", config.THEME_DEFAULTS['BAR_BACKGROUND_IMAGE']))
+    )
+    
+    del tempConfig
 
 
 class CPU:
@@ -105,63 +193,19 @@ class CPU:
 
         if config.THEME_DATA['STATS']['CPU']['PERCENTAGE']['TEXT'].get("SHOW", False):
             sectionConfig = config.THEME_DATA['STATS']['CPU']['PERCENTAGE']['TEXT'];
-            cpu_percentage_text = format_number(cpu_percentage,
-                                                sectionConfig.get("DECIMALS", "AUTO"),
-                                                sectionConfig.get("ALIGN", "RIGHT"),
-                                                sectionConfig.get("TEXT_LENGTH", 4)
-                                  )
-            if sectionConfig.get("SHOW_UNIT", True):
-                cpu_percentage_text += "%"
-
-            display.lcd.DisplayText(
-                text=cpu_percentage_text,
-                x=sectionConfig.get("X", 0),
-                y=sectionConfig.get("Y", 0),
-                font=sectionConfig.get("FONT", "roboto-mono/RobotoMono-Regular.ttf"),
-                font_size=sectionConfig.get("FONT_SIZE", 10),
-                font_color=sectionConfig.get("FONT_COLOR", (0, 0, 0)),
-                background_color=sectionConfig.get("BACKGROUND_COLOR", (255, 255, 255)),
-                background_image=get_full_path(config.THEME_DATA['PATH'], sectionConfig.get("BACKGROUND_IMAGE", None))
-            )
+            cpu_percentage_text = format_number(cpu_percentage, sectionConfig, "%")
+            text_factory(cpu_percentage_text, cpu_percentage, sectionConfig)
 
         if config.THEME_DATA['STATS']['CPU']['PERCENTAGE']['GRAPH'].get("SHOW", False):
             sectionConfig = config.THEME_DATA['STATS']['CPU']['PERCENTAGE']['GRAPH'];
-            display.lcd.DisplayProgressBar(
-                x=sectionConfig.get("X", 0),
-                y=sectionConfig.get("Y", 0),
-                width=sectionConfig.get("WIDTH", 0),
-                height=sectionConfig.get("HEIGHT", 0),
-                value=int(cpu_percentage),
-                min_value=sectionConfig.get("MIN_VALUE", 0),
-                max_value=sectionConfig.get("MAX_VALUE", 100),
-                bar_color=sectionConfig.get("BAR_COLOR", (0, 0, 0)),
-                bar_outline=sectionConfig.get("BAR_OUTLINE", False),
-                background_color=sectionConfig.get("BACKGROUND_COLOR", (255, 255, 255)),
-                background_image=get_full_path(config.THEME_DATA['PATH'], sectionConfig.get("BACKGROUND_IMAGE", None))
-            )
+            bar_factory(cpu_percentage, sectionConfig)
 
     @staticmethod
     def frequency():
         if config.THEME_DATA['STATS']['CPU']['FREQUENCY']['TEXT'].get("SHOW", False):
             sectionConfig = config.THEME_DATA['STATS']['CPU']['FREQUENCY']['TEXT'];
-            cpu_freq = format_number(sensors.Cpu.frequency() / 1000,
-                                     sectionConfig.get("DECIMALS", 2),
-                                     sectionConfig.get("ALIGN", "RIGHT"),
-                                     sectionConfig.get("TEXT_LENGTH", 4)
-                                    )
-            if sectionConfig.get("SHOW_UNIT", True):
-                cpu_freq += " GHz"
-
-            display.lcd.DisplayText(
-                text=cpu_freq,
-                x=sectionConfig.get("X", 0),
-                y=sectionConfig.get("Y", 0),
-                font=sectionConfig.get("FONT", "roboto-mono/RobotoMono-Regular.ttf"),
-                font_size=sectionConfig.get("FONT_SIZE", 10),
-                font_color=sectionConfig.get("FONT_COLOR", (0, 0, 0)),
-                background_color=sectionConfig.get("BACKGROUND_COLOR", (255, 255, 255)),
-                background_image=get_full_path(config.THEME_DATA['PATH'], sectionConfig.get("BACKGROUND_IMAGE", None))
-            )
+            cpu_freq = format_number(sensors.Cpu.frequency() / 1000, sectionConfig, "GHz")
+            text_factory(cpu_freq, sensors.Cpu.frequency(), sectionConfig)
 
     @staticmethod
     def load():
@@ -170,66 +214,18 @@ class CPU:
 
         if config.THEME_DATA['STATS']['CPU']['LOAD']['ONE']['TEXT'].get("SHOW", False):
             sectionConfig = config.THEME_DATA['STATS']['CPU']['LOAD']['ONE']['TEXT'];
-            cpu_load_one = format_number(cpu_load[0],
-                                         sectionConfig.get("DECIMALS", "AUTO"),
-                                         sectionConfig.get("ALIGN", "RIGHT"),
-                                         sectionConfig.get("TEXT_LENGTH", 4)
-                                        )
-            if sectionConfig.get("SHOW_UNIT", True):
-                cpu_load_one += "%"
-
-            display.lcd.DisplayText(
-                text=cpu_load_one,
-                x=sectionConfig.get("X", 0),
-                y=sectionConfig.get("Y", 0),
-                font=sectionConfig.get("FONT", "roboto-mono/RobotoMono-Regular.ttf"),
-                font_size=sectionConfig.get("FONT_SIZE", 10),
-                font_color=sectionConfig.get("FONT_COLOR", (0, 0, 0)),
-                background_color=sectionConfig.get("BACKGROUND_COLOR", (255, 255, 255)),
-                background_image=get_full_path(config.THEME_DATA['PATH'], sectionConfig.get("BACKGROUND_IMAGE", None))
-            )
+            cpu_load_one = format_number(cpu_load[0], sectionConfig, "%")
+            text_factory(cpu_load_one, cpu_load[0], sectionConfig)
 
         if config.THEME_DATA['STATS']['CPU']['LOAD']['FIVE']['TEXT'].get("SHOW", False):
             sectionConfig = config.THEME_DATA['STATS']['CPU']['LOAD']['FIVE']['TEXT'];
-            cpu_load_five = format_number(cpu_load[1],
-                                          sectionConfig.get("DECIMALS", "AUTO"),
-                                          sectionConfig.get("ALIGN", "RIGHT"),
-                                          sectionConfig.get("TEXT_LENGTH", 4)
-                                         )
-            if sectionConfig.get("SHOW_UNIT", True):
-                cpu_load_five += "%"
-
-            display.lcd.DisplayText(
-                text=cpu_load_five,
-                x=sectionConfig.get("X", 0),
-                y=sectionConfig.get("Y", 0),
-                font=sectionConfig.get("FONT", "roboto-mono/RobotoMono-Regular.ttf"),
-                font_size=sectionConfig.get("FONT_SIZE", 10),
-                font_color=sectionConfig.get("FONT_COLOR", (0, 0, 0)),
-                background_color=sectionConfig.get("BACKGROUND_COLOR", (255, 255, 255)),
-                background_image=get_full_path(config.THEME_DATA['PATH'], sectionConfig.get("BACKGROUND_IMAGE", None))
-            )
+            cpu_load_five = format_number(cpu_load[1], sectionConfig, "%")
+            text_factory(cpu_load_five, cpu_load[1], sectionConfig)
 
         if config.THEME_DATA['STATS']['CPU']['LOAD']['FIFTEEN']['TEXT'].get("SHOW", False):
             sectionConfig = config.THEME_DATA['STATS']['CPU']['LOAD']['FIFTEEN']['TEXT']
-            cpu_load_fifteen = format_number(cpu_load[2],
-                                             sectionConfig.get("DECIMALS", "AUTO"),
-                                             sectionConfig.get("ALIGN", "RIGHT"),
-                                             sectionConfig.get("TEXT_LENGTH", 4)
-                                            )
-            if sectionConfig.get("SHOW_UNIT", True):
-                cpu_load_fifteen += "%"
-
-            display.lcd.DisplayText(
-                text=cpu_load_fifteen,
-                x=sectionConfig.get("X", 0),
-                y=sectionConfig.get("Y", 0),
-                font=sectionConfig.get("FONT", "roboto-mono/RobotoMono-Regular.ttf"),
-                font_size=sectionConfig.get("FONT_SIZE", 10),
-                font_color=sectionConfig.get("FONT_COLOR", (0, 0, 0)),
-                background_color=sectionConfig.get("BACKGROUND_COLOR", (255, 255, 255)),
-                background_image=get_full_path(config.THEME_DATA['PATH'], sectionConfig.get("BACKGROUND_IMAGE", None))
-            )
+            cpu_load_fifteen = format_number(cpu_load[2], sectionConfig, "%")
+            text_factory(cpu_load_fifteen, cpu_load[2], sectionConfig)
 
     @staticmethod
     def is_temperature_available():
@@ -239,41 +235,12 @@ class CPU:
     def temperature():
         if config.THEME_DATA['STATS']['CPU']['TEMPERATURE']['TEXT'].get("SHOW", False):
             sectionConfig = config.THEME_DATA['STATS']['CPU']['TEMPERATURE']['TEXT'];
-            cpu_temp = format_number(sensors.Cpu.temperature(),
-                                     sectionConfig.get("DECIMALS", 0),
-                                     sectionConfig.get("ALIGN", "RIGHT"),
-                                     sectionConfig.get("TEXT_LENGTH", 3)
-                                    )
-
-            if sectionConfig.get("SHOW_UNIT", True):
-                cpu_temp += "°C"
-
-            display.lcd.DisplayText(
-                text=cpu_temp,
-                x=sectionConfig.get("X", 0),
-                y=sectionConfig.get("Y", 0),
-                font=sectionConfig.get("FONT","roboto-mono/RobotoMono-Regular.ttf"),
-                font_size=sectionConfig.get("FONT_SIZE", 10),
-                font_color=sectionConfig.get("FONT_COLOR", (0, 0, 0)),
-                background_color=sectionConfig.get("BACKGROUND_COLOR", (255, 255, 255)),
-                background_image=get_full_path(config.THEME_DATA['PATH'], sectionConfig.get("BACKGROUND_IMAGE", None))
-            )
+            cpu_temp = format_number(sensors.Cpu.temperature(), sectionConfig, "°C")
+            text_factory(cpu_temp, sensors.Cpu.temperature(), sectionConfig)
 
         if config.THEME_DATA['STATS']['CPU']['TEMPERATURE']['GRAPH'].get("SHOW", False):
             sectionConfig = config.THEME_DATA['STATS']['CPU']['TEMPERATURE']['GRAPH']
-            display.lcd.DisplayProgressBar(
-                x=sectionConfig.get("X", 0),
-                y=sectionConfig.get("Y", 0),
-                width=sectionConfig.get("WIDTH", 0),
-                height=sectionConfig.get("HEIGHT", 0),
-                value=int(sensors.Cpu.temperature()),
-                min_value=sectionConfig.get("MIN_VALUE", 0),
-                max_value=sectionConfig.get("MAX_VALUE", 100),
-                bar_color=sectionConfig.get("BAR_COLOR", (0, 0, 0)),
-                bar_outline=sectionConfig.get("BAR_OUTLINE", False),
-                background_color=sectionConfig.get("BACKGROUND_COLOR", (255, 255, 255)),
-                background_image=get_full_path(config.THEME_DATA['PATH'], sectionConfig.get( "BACKGROUND_IMAGE", None))
-            )
+            bar_factory(sensors.Cpu.temperature(), sectionConfig)
 
 def display_gpu_stats(load, memory_percentage, memory_used_mb, temperature):
     if config.THEME_DATA['STATS']['GPU']['PERCENTAGE']['GRAPH'].get("SHOW", False):
@@ -284,19 +251,7 @@ def display_gpu_stats(load, memory_percentage, memory_used_mb, temperature):
             config.THEME_DATA['STATS']['GPU']['PERCENTAGE']['TEXT']['SHOW'] = False
         else:
             # logger.debug(f"GPU Load: {load}")
-            display.lcd.DisplayProgressBar(
-                x=sectionConfig.get("X", 0),
-                y=sectionConfig.get("Y", 0),
-                width=sectionConfig.get("WIDTH", 0),
-                height=sectionConfig.get("HEIGHT", 0),
-                value=int(load),
-                min_value=sectionConfig.get("MIN_VALUE", 0),
-                max_value=sectionConfig.get("MAX_VALUE", 100),
-                bar_color=sectionConfig.get("BAR_COLOR", (0, 0, 0)),
-                bar_outline=sectionConfig.get("BAR_OUTLINE", False),
-                background_color=sectionConfig.get("BACKGROUND_COLOR", (255, 255, 255)),
-                background_image=get_full_path(config.THEME_DATA['PATH'], sectionConfig.get("BACKGROUND_IMAGE", None))
-            )
+            bar_factory(int(load), sectionConfig)
 
     if config.THEME_DATA['STATS']['GPU']['PERCENTAGE']['TEXT'].get("SHOW", False):
         sectionConfig = config.THEME_DATA['STATS']['GPU']['PERCENTAGE']['TEXT']
@@ -305,24 +260,8 @@ def display_gpu_stats(load, memory_percentage, memory_used_mb, temperature):
             config.THEME_DATA['STATS']['GPU']['PERCENTAGE']['GRAPH']['SHOW'] = False
             config.THEME_DATA['STATS']['GPU']['PERCENTAGE']['TEXT']['SHOW'] = False
         else:
-            load_text = format_number(load,
-                                      sectionConfig.get("DECIMALS", "AUTO"),
-                                      sectionConfig.get("ALIGN", "RIGHT"),
-                                      sectionConfig.get("TEXT_LENGTH", 4)
-                                     )
-            if sectionConfig.get("SHOW_UNIT", True):
-                load_text += "%"
-
-            display.lcd.DisplayText(
-                text=load_text,
-                x=sectionConfig.get("X", 0),
-                y=sectionConfig.get("Y", 0),
-                font=sectionConfig.get("FONT", "roboto-mono/RobotoMono-Regular.ttf"),
-                font_size=sectionConfig.get("FONT_SIZE", 10),
-                font_color=sectionConfig.get("FONT_COLOR", (0, 0, 0)),
-                background_color=sectionConfig.get("BACKGROUND_COLOR", (255, 255, 255)),
-                background_image=get_full_path(config.THEME_DATA['PATH'], sectionConfig.get("BACKGROUND_IMAGE", None))
-            )
+            load_text = format_number(load, sectionConfig, "%")
+            text_factory(load_text, load, sectionConfig)
 
     if config.THEME_DATA['STATS']['GPU']['MEMORY']['GRAPH'].get("SHOW", False):
         sectionConfig = config.THEME_DATA['STATS']['GPU']['MEMORY']['GRAPH'];
@@ -330,19 +269,7 @@ def display_gpu_stats(load, memory_percentage, memory_used_mb, temperature):
             logger.warning("Your GPU memory relative usage (%) is not supported yet")
             config.THEME_DATA['STATS']['GPU']['MEMORY']['GRAPH']['SHOW'] = False
         else:
-            display.lcd.DisplayProgressBar(
-                x=sectionConfig.get("X", 0),
-                y=sectionConfig.get("Y", 0),
-                width=sectionConfig.get("WIDTH", 0),
-                height=sectionConfig.get("HEIGHT", 0),
-                value=int(memory_percentage),
-                min_value=sectionConfig.get("MIN_VALUE", 0),
-                max_value=sectionConfig.get("MAX_VALUE", 100),
-                bar_color=sectionConfig.get("BAR_COLOR", (0, 0, 0)),
-                bar_outline=sectionConfig.get("BAR_OUTLINE", False),
-                background_color=sectionConfig.get("BACKGROUND_COLOR", (255, 255, 255)),
-                background_image=get_full_path(config.THEME_DATA['PATH'], sectionConfig.get("BACKGROUND_IMAGE", None))
-            )
+            bar_factory(memory_percentage, sectionConfig)
 
     if config.THEME_DATA['STATS']['GPU']['MEMORY']['TEXT'].get("SHOW", False):
         sectionConfig = config.THEME_DATA['STATS']['GPU']['MEMORY']['TEXT'];
@@ -350,33 +277,8 @@ def display_gpu_stats(load, memory_percentage, memory_used_mb, temperature):
             logger.warning("Your GPU memory absolute usage (M) is not supported yet")
             config.THEME_DATA['STATS']['GPU']['MEMORY']['TEXT']['SHOW'] = False
         else:
-            if sectionConfig.get("UNIT", "M") == "M":
-                mem_used_text = format_number(memory_used_mb,
-                                              sectionConfig.get("DECIMALS", 0),
-                                              sectionConfig.get("ALIGN", "RIGHT"),
-                                              sectionConfig.get("TEXT_LENGTH", 5)
-                                             )
-                if sectionConfig.get("SHOW_UNIT", True):
-                    mem_used_text += " M"
-            else:
-                mem_used_text = format_number(memory_used_mb/1000,
-                                              sectionConfig.get("DECIMALS", "AUTO"),
-                                              sectionConfig.get("ALIGN", "RIGHT"),
-                                              sectionConfig.get("TEXT_LENGTH", 4)
-                                             )
-                if sectionConfig.get("SHOW_UNIT", True):
-                    mem_used_text += " G"
-
-            display.lcd.DisplayText(
-                text=mem_used_text,
-                x=sectionConfig.get("X", 0),
-                y=sectionConfig.get("Y", 0),
-                font=sectionConfig.get("FONT", "roboto-mono/RobotoMono-Regular.ttf"),
-                font_size=sectionConfig.get("FONT_SIZE", 10),
-                font_color=sectionConfig.get("FONT_COLOR", (0, 0, 0)),
-                background_color=sectionConfig.get("BACKGROUND_COLOR", (255, 255, 255)),
-                background_image=get_full_path(config.THEME_DATA['PATH'], sectionConfig.get("BACKGROUND_IMAGE", None))
-            )
+            mem_used_text = format_number(memory_used_mb * 1000, sectionConfig, "", True)
+            text_factory(mem_used_text, memory_used_mb, sectionConfig)
 
     if config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['TEXT'].get("SHOW", False):
         sectionConfig = config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['TEXT']
@@ -384,43 +286,13 @@ def display_gpu_stats(load, memory_percentage, memory_used_mb, temperature):
             logger.warning("Your GPU temperature is not supported yet")
             config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['TEXT']['SHOW'] = False
         else:
-            temp_text = f"{int(temperature):>3}"
-            temp_text = format_number(temperature,
-                                      sectionConfig.get("DECIMALS", 0),
-                                      sectionConfig.get("ALIGN", "RIGHT"),
-                                      sectionConfig.get("TEXT_LENGTH", 3)
-                                     )
-            if sectionConfig.get("SHOW_UNIT", True):
-                temp_text += "°C"
-
-            display.lcd.DisplayText(
-                text=temp_text,
-                x=sectionConfig.get("X", 0),
-                y=sectionConfig.get("Y", 0),
-                font=sectionConfig.get("FONT", "roboto-mono/RobotoMono-Regular.ttf"),
-                font_size=sectionConfig.get("FONT_SIZE", 10),
-                font_color=sectionConfig.get("FONT_COLOR", (0, 0, 0)),
-                background_color=sectionConfig.get("BACKGROUND_COLOR", (255, 255, 255)),
-                background_image=get_full_path(config.THEME_DATA['PATH'], sectionConfig.get("BACKGROUND_IMAGE", None))
-            )
+            temp_text = format_number(temperature, sectionConfig, "°C")
+            text_factory(temp_text, temperature, sectionConfig)
 
             if config.THEME_DATA['STATS']['GPU']['TEMPERATURE'].get("GRAPH", False):
                 if config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH'].get("SHOW", False):
                     sectionConfig = config.THEME_DATA['STATS']['GPU']['TEMPERATURE']['GRAPH']
-                    display.lcd.DisplayProgressBar(
-                        x=sectionConfig.get("X", 0),
-                        y=sectionConfig.get("Y", 0),
-                        width=sectionConfig.get("WIDTH", 0),
-                        height=sectionConfig.get("HEIGHT", 0),
-                        value=int(temperature),
-                        min_value=sectionConfig.get("MIN_VALUE", 0),
-                        max_value=sectionConfig.get("MAX_VALUE", 100),
-                        bar_color=sectionConfig.get("BAR_COLOR", (0, 0, 0)),
-                        bar_outline=sectionConfig.get("BAR_OUTLINE", False),
-                        background_color=sectionConfig.get("BACKGROUND_COLOR", (255, 255, 255)),
-                        background_image=get_full_path(config.THEME_DATA['PATH'], sectionConfig.get("BACKGROUND_IMAGE", None))
-                    )
-
+                    bar_factory(temperature, sectionConfig)
 
 class Gpu:
     @staticmethod
@@ -440,153 +312,40 @@ class Memory:
 
         if config.THEME_DATA['STATS']['MEMORY']['SWAP'].get('PERCENT_TEXT', False) and config.THEME_DATA['STATS']['MEMORY']['SWAP']['PERCENT_TEXT'].get("SHOW", False):
             sectionConfig = config.THEME_DATA['STATS']['MEMORY']['SWAP']['PERCENT_TEXT']
-            swap_percent_text = format_number(swap_percent,
-                                              sectionConfig.get("DECIMALS", "AUTO"),
-                                              sectionConfig.get("ALIGN", "RIGHT"),
-                                              sectionConfig.get("TEXT_LENGTH", 4)
-                                             )
-
-            if sectionConfig.get("SHOW_UNIT", True):
-                swap_percent_text += "%"
-
-            display.lcd.DisplayText(
-                text=swap_percent_text,
-                x=sectionConfig.get("X", 0),
-                y=sectionConfig.get("Y", 0),
-                font=sectionConfig.get("FONT", "roboto-mono/RobotoMono-Regular.ttf"),
-                font_size=sectionConfig.get("FONT_SIZE", 10),
-                font_color=sectionConfig.get("FONT_COLOR", (0, 0, 0)),
-                background_color=sectionConfig.get("BACKGROUND_COLOR", (255, 255, 255)),
-                background_image=get_full_path(config.THEME_DATA['PATH'], sectionConfig.get("BACKGROUND_IMAGE", None))
-            )
+            swap_percent_text = format_number(swap_percent, sectionConfig, "%")
+            text_factory(swap_percent_text, swap_percent, sectionConfig)
 
         if config.THEME_DATA['STATS']['MEMORY']['SWAP']['GRAPH'].get("SHOW", False):
             sectionConfig = config.THEME_DATA['STATS']['MEMORY']['SWAP']['GRAPH']
-            display.lcd.DisplayProgressBar(
-                x=sectionConfig.get("X", 0),
-                y=sectionConfig.get("Y", 0),
-                width=sectionConfig.get("WIDTH", 0),
-                height=sectionConfig.get("HEIGHT", 0),
-                value=int(swap_percent),
-                min_value=sectionConfig.get("MIN_VALUE", 0),
-                max_value=sectionConfig.get("MAX_VALUE", 100),
-                bar_color=sectionConfig.get("BAR_COLOR", (0, 0, 0)),
-                bar_outline=sectionConfig.get("BAR_OUTLINE", False),
-                background_color=sectionConfig.get("BACKGROUND_COLOR", (255, 255, 255)),
-                background_image=get_full_path(config.THEME_DATA['PATH'], sectionConfig.get("BACKGROUND_IMAGE", None))
-            )
+            bar_factory(swap_percent, sectionConfig)
 
         virtual_percent = sensors.Memory.virtual_percent()
 
         if config.THEME_DATA['STATS']['MEMORY']['VIRTUAL']['GRAPH'].get("SHOW", False):
             sectionConfig = config.THEME_DATA['STATS']['MEMORY']['VIRTUAL']['GRAPH']
-            display.lcd.DisplayProgressBar(
-                x=sectionConfig.get("X", 0),
-                y=sectionConfig.get("Y", 0),
-                width=sectionConfig.get("WIDTH", 0),
-                height=sectionConfig.get("HEIGHT", 0),
-                value=int(virtual_percent),
-                min_value=sectionConfig.get("MIN_VALUE", 0),
-                max_value=sectionConfig.get("MAX_VALUE", 100),
-                bar_color=sectionConfig.get("BAR_COLOR", (0, 0, 0)),
-                bar_outline=sectionConfig.get("BAR_OUTLINE", False),
-                background_color=sectionConfig.get("BACKGROUND_COLOR", (255, 255, 255)),
-                background_image=get_full_path(config.THEME_DATA['PATH'], sectionConfig.get("BACKGROUND_IMAGE", None))
-            )
+            bar_factory(virtual_percent, sectionConfig)
 
         if config.THEME_DATA['STATS']['MEMORY']['VIRTUAL']['PERCENT_TEXT'].get("SHOW", False):
             sectionConfig = config.THEME_DATA['STATS']['MEMORY']['VIRTUAL']['PERCENT_TEXT']
-            virtual_percent_text = format_number(virtual_percent,
-                                                 sectionConfig.get("DECIMALS", "AUTO"),
-                                                 sectionConfig.get("ALIGN", "RIGHT"),
-                                                 sectionConfig.get("TEXT_LENGTH", 4)
-                                                )
-
-            if sectionConfig.get("SHOW_UNIT", True):
-                virtual_percent_text += "%"
-
-            display.lcd.DisplayText(
-                text=virtual_percent_text,
-                x=sectionConfig.get("X", 0),
-                y=sectionConfig.get("Y", 0),
-                font=sectionConfig.get("FONT", "roboto-mono/RobotoMono-Regular.ttf"),
-                font_size=sectionConfig.get("FONT_SIZE", 10),
-                font_color=sectionConfig.get("FONT_COLOR", (0, 0, 0)),
-                background_color=sectionConfig.get("BACKGROUND_COLOR", (255, 255, 255)),
-                background_image=get_full_path(config.THEME_DATA['PATH'], sectionConfig.get("BACKGROUND_IMAGE", None))
-            )
+            virtual_percent_text = format_number(virtual_percent, sectionConfig, "%")
+            text_factory(virtual_percent_text, virtual_percent, sectionConfig)
 
         if config.THEME_DATA['STATS']['MEMORY']['VIRTUAL']['USED'].get("SHOW", False):
             virtual_used = sensors.Memory.virtual_used()
             sectionConfig = config.THEME_DATA['STATS']['MEMORY']['VIRTUAL']['USED']
-
-            if sectionConfig.get("UNIT", "M") == "M":
-                virtual_used_text = format_number(virtual_used / 1000000,
-                                                  sectionConfig.get("DECIMALS", 0),
-                                                  sectionConfig.get("ALIGN", "RIGHT"),
-                                                  sectionConfig.get("TEXT_LENGTH", 5)
-                                                 )
-                if sectionConfig.get("SHOW_UNIT", True):
-                    virtual_used_text += " M"
-            else:
-                virtual_used_text = format_number(virtual_used / 1000000 / 1000,
-                                                  sectionConfig.get("DECIMALS", "AUTO"),
-                                                  sectionConfig.get("ALIGN", "RIGHT"),
-                                                  sectionConfig.get("TEXT_LENGTH", 4)
-                                                 )
-                if sectionConfig.get("SHOW_UNIT", True):
-                    virtual_used_text += " G"
-
-            display.lcd.DisplayText(
-                text=virtual_used_text,
-                x=sectionConfig.get("X", 0),
-                y=sectionConfig.get("Y", 0),
-                font=sectionConfig.get("FONT",  "roboto-mono/RobotoMono-Regular.ttf"),
-                font_size=sectionConfig.get("FONT_SIZE", 10),
-                font_color=sectionConfig.get("FONT_COLOR", (0, 0, 0)),
-                background_color=sectionConfig.get("BACKGROUND_COLOR", (255, 255, 255)),
-                background_image=get_full_path(config.THEME_DATA['PATH'], sectionConfig.get("BACKGROUND_IMAGE", None))
-            )
+            virtual_used_text = format_number(virtual_used, sectionConfig, "", True)
+            text_factory(virtual_used_text, virtual_used, sectionConfig)
 
         if config.THEME_DATA['STATS']['MEMORY']['VIRTUAL']['FREE'].get("SHOW", False):
             virtual_free = sensors.Memory.virtual_free()
             sectionConfig = config.THEME_DATA['STATS']['MEMORY']['VIRTUAL']['FREE']
-
-            if sectionConfig.get("UNIT", "M") == "M":
-                virtual_free_text = format_number(virtual_free / 1000000,
-                                                  sectionConfig.get("DECIMALS", 0),
-                                                  sectionConfig.get("ALIGN", "RIGHT"),
-                                                  sectionConfig.get("TEXT_LENGTH", 5)
-                                                 )
-                if sectionConfig.get("SHOW_UNIT", True):
-                    virtual_free_text += " M"
-            else:
-                virtual_free_text = format_number(virtual_free / 1000000 / 1000,
-                                                  sectionConfig.get("DECIMALS", "AUTO"),
-                                                  sectionConfig.get("ALIGN", "RIGHT"),
-                                                  sectionConfig.get("TEXT_LENGTH", 4)
-                                                 )
-                if sectionConfig.get("SHOW_UNIT", True):
-                    virtual_free_text += " G"
-
-            display.lcd.DisplayText(
-                text=virtual_free_text,
-                x=sectionConfig.get("X", 0),
-                y=sectionConfig.get("Y", 0),
-                font=sectionConfig.get("FONT", "roboto-mono/RobotoMono-Regular.ttf"),
-                font_size=sectionConfig.get("FONT_SIZE", 10),
-                font_color=sectionConfig.get("FONT_COLOR", (0, 0, 0)),
-                background_color=sectionConfig.get("BACKGROUND_COLOR", (255, 255, 255)),
-                background_image=get_full_path(config.THEME_DATA['PATH'], sectionConfig.get("BACKGROUND_IMAGE", None))
-            )
+            virtual_free_text = format_number(virtual_free, sectionConfig, "", True)
+            text_factory(virtual_free_text, virtual_free, sectionConfig)
 
 
 class Disk:
     @staticmethod
     def stats():
-        used = sensors.Disk.disk_used()
-        free = sensors.Disk.disk_free()
-
         if config.THEME_DATA['STATS'].get('DISKS', False):
             for partition in config.THEME_DATA['STATS']['DISKS']:
                 used = sensors.Disk.disk_used(config.THEME_DATA['STATS']['DISKS'][partition]['PARTITION'])
@@ -596,242 +355,61 @@ class Disk:
                 if config.THEME_DATA['STATS']['DISKS'][partition]['USED'].get("GRAPH", False):
                     sectionConfig = config.THEME_DATA['STATS']['DISKS'][partition]['USED']['GRAPH']
                     if sectionConfig.get("SHOW", False):
-                        display.lcd.DisplayProgressBar(
-                            x=sectionConfig.get("X", 0),
-                            y=sectionConfig.get("Y", 0),
-                            width=sectionConfig.get("WIDTH", 0),
-                            height=sectionConfig.get("HEIGHT", 0),
-                            value=int(sensors.Disk.disk_usage_percent(config.THEME_DATA['STATS']['DISKS'][partition]['PARTITION'])),
-                            min_value=sectionConfig.get("MIN_VALUE", 0),
-                            max_value=sectionConfig.get("MAX_VALUE", 100),
-                            bar_color=sectionConfig.get("BAR_COLOR", (0, 0, 0)),
-                            bar_outline=sectionConfig.get("BAR_OUTLINE", False),
-                            background_color=sectionConfig.get("BACKGROUND_COLOR", (255, 255, 255)),
-                            background_image=get_full_path(config.THEME_DATA['PATH'], sectionConfig.get("BACKGROUND_IMAGE", None))
-                        )
+                        bar_factory(usage_percent, sectionConfig)
 
                 if config.THEME_DATA['STATS']['DISKS'][partition]['USED'].get("TEXT", False):
                     sectionConfig = config.THEME_DATA['STATS']['DISKS'][partition]['USED']['TEXT']
                     if sectionConfig.get("SHOW", False):
-                        if sectionConfig.get("UNIT", "G") == "M":
-                            used_text = format_number(used / 1000000,
-                                                      sectionConfig.get("DECIMALS", "AUTO"),
-                                                      sectionConfig.get("ALIGN", "RIGHT"),
-                                                      sectionConfig.get("TEXT_LENGTH", 5)
-                                                     )
-                            if sectionConfig.get("SHOW_UNIT", True):
-                                used_text += " M"
-                        else:
-                            used_text = format_number(used / 1000000 / 1000,
-                                                      sectionConfig.get("DECIMALS", "AUTO"),
-                                                      sectionConfig.get("ALIGN", "RIGHT"),
-                                                      sectionConfig.get("TEXT_LENGTH", 5)
-                                                     )
-                            if sectionConfig.get("SHOW_UNIT", True):
-                                used_text += " G"
-
-                        display.lcd.DisplayText(
-                            text=used_text,
-                            x=sectionConfig.get("X", 0),
-                            y=sectionConfig.get("Y", 0),
-                            font=sectionConfig.get("FONT", "roboto-mono/RobotoMono-Regular.ttf"),
-                            font_size=sectionConfig.get("FONT_SIZE", 10),
-                            font_color=sectionConfig.get("FONT_COLOR", (0, 0, 0)),
-                            background_color=sectionConfig.get("BACKGROUND_COLOR", (255, 255, 255)),
-                            background_image=get_full_path(config.THEME_DATA['PATH'], sectionConfig.get("BACKGROUND_IMAGE", None))
-                        )
+                        used_text = format_number(used, sectionConfig, "", True)
+                        text_factory(used_text, used, sectionConfig)
 
                 if config.THEME_DATA['STATS']['DISKS'][partition]['USED'].get("PERCENT_TEXT", False):
                     sectionConfig = config.THEME_DATA['STATS']['DISKS'][partition]['USED']['PERCENT_TEXT']
                     if sectionConfig.get("SHOW", False):
-
-                        percent_text = format_number(usage_percent,
-                                                     sectionConfig.get("DECIMALS", "AUTO"),
-                                                     sectionConfig.get("ALIGN", "RIGHT"),
-                                                     sectionConfig.get("TEXT_LENGTH", 4)
-                                                    )
-
-                        if sectionConfig.get("SHOW_UNIT", True):
-                            percent_text += "%"
-
-                        display.lcd.DisplayText(
-                            text=percent_text,
-                            x=sectionConfig.get("X", 0),
-                            y=sectionConfig.get("Y", 0),
-                            font=sectionConfig.get("FONT", "roboto-mono/RobotoMono-Regular.ttf"),
-                            font_size=sectionConfig.get("FONT_SIZE", 10),
-                            font_color=sectionConfig.get("FONT_COLOR", (0, 0, 0)),
-                            background_color=sectionConfig.get("BACKGROUND_COLOR", (255, 255, 255)),
-                            background_image=get_full_path(config.THEME_DATA['PATH'], sectionConfig.get("BACKGROUND_IMAGE", None))
-                        )
+                        percent_text = format_number(usage_percent, sectionConfig, "%")
+                        text_factory(percent_text, usage_percent, sectionConfig)
 
                 if config.THEME_DATA['STATS']['DISKS'][partition].get("TOTAL", False):
                     sectionConfig = config.THEME_DATA['STATS']['DISKS'][partition]['TOTAL']['TEXT']
                     if sectionConfig.get("SHOW", False):
-
-                        if sectionConfig.get("UNIT", "G") == "M":
-                            total_text = format_number((free + used) / 1000000,
-                                                       sectionConfig.get("DECIMALS", "AUTO"),
-                                                       sectionConfig.get("ALIGN", "RIGHT"),
-                                                       sectionConfig.get("TEXT_LENGTH", 5)
-                                                      )
-                            if sectionConfig.get("SHOW_UNIT", True):
-                                total_text += " M"
-                        else:
-                            total_text = format_number((free + used) / 1000000 / 1000,
-                                                       sectionConfig.get("DECIMALS", "AUTO"),
-                                                       sectionConfig.get("ALIGN", "RIGHT"),
-                                                       sectionConfig.get("TEXT_LENGTH", 5)
-                                                      )
-                            if sectionConfig.get("SHOW_UNIT", True):
-                                total_text += " G"
-
-                        display.lcd.DisplayText(
-                            text=total_text,
-                            x=sectionConfig.get("X", 0),
-                            y=sectionConfig.get("Y", 0),
-                            font=sectionConfig.get("FONT", "roboto-mono/RobotoMono-Regular.ttf"),
-                            font_size=sectionConfig.get("FONT_SIZE", 10),
-                            font_color=sectionConfig.get("FONT_COLOR", (0, 0, 0)),
-                            background_color=sectionConfig.get("BACKGROUND_COLOR", (255, 255, 255)),
-                            background_image=get_full_path(config.THEME_DATA['PATH'], sectionConfig.get("BACKGROUND_IMAGE", None))
-                        )
+                        total_text = format_number((free + used), sectionConfig, "", True)
+                        text_factory(total_text, (free + used), sectionConfig)
 
                 if config.THEME_DATA['STATS']['DISKS'][partition]['FREE'].get("TEXT", False):
                     sectionConfig = config.THEME_DATA['STATS']['DISKS'][partition]['FREE']['TEXT']
                     if sectionConfig.get("SHOW", False):
+                        free_text = format_number(free, sectionConfig, "", True)
+                        text_factory(free_text, free, sectionConfig)
 
-                        if sectionConfig.get("UNIT", "G") == "M":
-                            free_text = format_number(free / 1000000,
-                                                      sectionConfig.get("DECIMALS", "AUTO"),
-                                                      sectionConfig.get("ALIGN", "RIGHT"),
-                                                      sectionConfig.get("TEXT_LENGTH", 5)
-                                                     )
-                            if sectionConfig.get("SHOW_UNIT", True):
-                                free_text += " M"
-                        else:
-                            free_text = format_number(free / 1000000 / 1000,
-                                                      sectionConfig.get("DECIMALS", "AUTO"),
-                                                      sectionConfig.get("ALIGN", "RIGHT"),
-                                                      sectionConfig.get("TEXT_LENGTH", 5)
-                                                     )
-                            if sectionConfig.get("SHOW_UNIT", True):
-                                free_text += " G"
-
-                        display.lcd.DisplayText(
-                            text=free_text,
-                            x=sectionConfig.get("X", 0),
-                            y=sectionConfig.get("Y", 0),
-                            font=sectionConfig.get("FONT", "roboto-mono/RobotoMono-Regular.ttf"),
-                            font_size=sectionConfig.get("FONT_SIZE", 10),
-                            font_color=sectionConfig.get("FONT_COLOR", (0, 0, 0)),
-                            background_color=sectionConfig.get("BACKGROUND_COLOR", (255, 255, 255)),
-                            background_image=get_full_path(config.THEME_DATA['PATH'], sectionConfig.get("BACKGROUND_IMAGE", None))
-                        )
-
-
+        # KEEPING DISK CONFIG FOR BACKWARDS COMPATIBILITY
+        
+        used = sensors.Disk.disk_used()
+        free = sensors.Disk.disk_free()
+        usage_percent = sensors.Disk.disk_usage_percent()
+        
         if config.THEME_DATA['STATS']['DISK']['USED']['GRAPH'].get("SHOW", False):
-            display.lcd.DisplayProgressBar(
-                x=config.THEME_DATA['STATS']['DISK']['USED']['GRAPH'].get("X", 0),
-                y=config.THEME_DATA['STATS']['DISK']['USED']['GRAPH'].get("Y", 0),
-                width=config.THEME_DATA['STATS']['DISK']['USED']['GRAPH'].get("WIDTH", 0),
-                height=config.THEME_DATA['STATS']['DISK']['USED']['GRAPH'].get("HEIGHT", 0),
-                value=int(sensors.Disk.disk_usage_percent()),
-                min_value=config.THEME_DATA['STATS']['DISK']['USED']['GRAPH'].get("MIN_VALUE", 0),
-                max_value=config.THEME_DATA['STATS']['DISK']['USED']['GRAPH'].get("MAX_VALUE", 100),
-                bar_color=config.THEME_DATA['STATS']['DISK']['USED']['GRAPH'].get("BAR_COLOR", (0, 0, 0)),
-                bar_outline=config.THEME_DATA['STATS']['DISK']['USED']['GRAPH'].get("BAR_OUTLINE", False),
-                background_color=config.THEME_DATA['STATS']['DISK']['USED']['GRAPH'].get("BACKGROUND_COLOR",
-                                                                                         (255, 255, 255)),
-                background_image=get_full_path(config.THEME_DATA['PATH'],
-                                               config.THEME_DATA['STATS']['DISK']['USED']['GRAPH'].get(
-                                                   "BACKGROUND_IMAGE",
-                                                   None))
-            )
+            sectionConfig = config.THEME_DATA['STATS']['DISK']['USED']['GRAPH']
+            bar_factory(usage_percent, sectionConfig)
 
         if config.THEME_DATA['STATS']['DISK']['USED']['TEXT'].get("SHOW", False):
-            used_text = f"{int(used / 1000000000):>5}"
-            if config.THEME_DATA['STATS']['DISK']['USED']['TEXT'].get("SHOW_UNIT", True):
-                used_text += " G"
-
-            display.lcd.DisplayText(
-                text=used_text,
-                x=config.THEME_DATA['STATS']['DISK']['USED']['TEXT'].get("X", 0),
-                y=config.THEME_DATA['STATS']['DISK']['USED']['TEXT'].get("Y", 0),
-                font=config.THEME_DATA['STATS']['DISK']['USED']['TEXT'].get("FONT",
-                                                                            "roboto-mono/RobotoMono-Regular.ttf"),
-                font_size=config.THEME_DATA['STATS']['DISK']['USED']['TEXT'].get("FONT_SIZE", 10),
-                font_color=config.THEME_DATA['STATS']['DISK']['USED']['TEXT'].get("FONT_COLOR", (0, 0, 0)),
-                background_color=config.THEME_DATA['STATS']['DISK']['USED']['TEXT'].get("BACKGROUND_COLOR",
-                                                                                        (255, 255, 255)),
-                background_image=get_full_path(config.THEME_DATA['PATH'],
-                                               config.THEME_DATA['STATS']['DISK']['USED']['TEXT'].get(
-                                                   "BACKGROUND_IMAGE",
-                                                   None))
-            )
+            sectionConfig = config.THEME_DATA['STATS']['DISK']['USED']['TEXT']
+            used_text = format_number(used, sectionConfig, "", True)
+            text_factory(used_text, used, sectionConfig)
 
         if config.THEME_DATA['STATS']['DISK']['USED']['PERCENT_TEXT'].get("SHOW", False):
-            percent_text = f"{int(sensors.Disk.disk_usage_percent()):>3}"
-            if config.THEME_DATA['STATS']['DISK']['USED']['PERCENT_TEXT'].get("SHOW_UNIT", True):
-                percent_text += "%"
-
-            display.lcd.DisplayText(
-                text=percent_text,
-                x=config.THEME_DATA['STATS']['DISK']['USED']['PERCENT_TEXT'].get("X", 0),
-                y=config.THEME_DATA['STATS']['DISK']['USED']['PERCENT_TEXT'].get("Y", 0),
-                font=config.THEME_DATA['STATS']['DISK']['USED']['PERCENT_TEXT'].get("FONT",
-                                                                                    "roboto-mono/RobotoMono-Regular.ttf"),
-                font_size=config.THEME_DATA['STATS']['DISK']['USED']['PERCENT_TEXT'].get("FONT_SIZE", 10),
-                font_color=config.THEME_DATA['STATS']['DISK']['USED']['PERCENT_TEXT'].get("FONT_COLOR", (0, 0, 0)),
-                background_color=config.THEME_DATA['STATS']['DISK']['USED']['PERCENT_TEXT'].get("BACKGROUND_COLOR",
-                                                                                                (255, 255, 255)),
-                background_image=get_full_path(config.THEME_DATA['PATH'],
-                                               config.THEME_DATA['STATS']['DISK']['USED']['PERCENT_TEXT'].get(
-                                                   "BACKGROUND_IMAGE",
-                                                   None))
-            )
+            sectionConfig = config.THEME_DATA['STATS']['DISK']['USED']['PERCENT_TEXT']
+            percent_text = format_number(usage_percent, sectionConfig, "%")
+            text_factory(percent_text, usage_percent, sectionConfig)
 
         if config.THEME_DATA['STATS']['DISK']['TOTAL']['TEXT'].get("SHOW", False):
-            total_text = f"{int((free + used) / 1000000000):>5}"
-            if config.THEME_DATA['STATS']['DISK']['TOTAL']['TEXT'].get("SHOW_UNIT", True):
-                total_text += " G"
-
-            display.lcd.DisplayText(
-                text=total_text,
-                x=config.THEME_DATA['STATS']['DISK']['TOTAL']['TEXT'].get("X", 0),
-                y=config.THEME_DATA['STATS']['DISK']['TOTAL']['TEXT'].get("Y", 0),
-                font=config.THEME_DATA['STATS']['DISK']['TOTAL']['TEXT'].get("FONT",
-                                                                             "roboto-mono/RobotoMono-Regular.ttf"),
-                font_size=config.THEME_DATA['STATS']['DISK']['TOTAL']['TEXT'].get("FONT_SIZE", 10),
-                font_color=config.THEME_DATA['STATS']['DISK']['TOTAL']['TEXT'].get("FONT_COLOR", (0, 0, 0)),
-                background_color=config.THEME_DATA['STATS']['DISK']['TOTAL']['TEXT'].get("BACKGROUND_COLOR",
-                                                                                         (255, 255, 255)),
-                background_image=get_full_path(config.THEME_DATA['PATH'],
-                                               config.THEME_DATA['STATS']['DISK']['TOTAL']['TEXT'].get(
-                                                   "BACKGROUND_IMAGE",
-                                                   None))
-            )
+            sectionConfig = config.THEME_DATA['STATS']['DISK']['TOTAL']['TEXT']
+            total_text = format_number((free + used), sectionConfig, "", True)
+            text_factory(total_text, (free + used), sectionConfig)
 
         if config.THEME_DATA['STATS']['DISK']['FREE']['TEXT'].get("SHOW", False):
-            free_text = f"{int(free / 1000000000):>5}"
-            if config.THEME_DATA['STATS']['DISK']['FREE']['TEXT'].get("SHOW_UNIT", True):
-                free_text += " G"
-
-            display.lcd.DisplayText(
-                text=free_text,
-                x=config.THEME_DATA['STATS']['DISK']['FREE']['TEXT'].get("X", 0),
-                y=config.THEME_DATA['STATS']['DISK']['FREE']['TEXT'].get("Y", 0),
-                font=config.THEME_DATA['STATS']['DISK']['FREE']['TEXT'].get("FONT",
-                                                                            "roboto-mono/RobotoMono-Regular.ttf"),
-                font_size=config.THEME_DATA['STATS']['DISK']['FREE']['TEXT'].get("FONT_SIZE", 10),
-                font_color=config.THEME_DATA['STATS']['DISK']['FREE']['TEXT'].get("FONT_COLOR", (0, 0, 0)),
-                background_color=config.THEME_DATA['STATS']['DISK']['FREE']['TEXT'].get("BACKGROUND_COLOR",
-                                                                                        (255, 255, 255)),
-                background_image=get_full_path(config.THEME_DATA['PATH'],
-                                               config.THEME_DATA['STATS']['DISK']['FREE']['TEXT'].get(
-                                                   "BACKGROUND_IMAGE",
-                                                   None))
-            )
+            sectionConfig = config.THEME_DATA['STATS']['DISK']['FREE']['TEXT']
+            free_text = format_number(free, sectionConfig, "", True)
+            text_factory(free_text, free, sectionConfig)
 
 class Net:
     @staticmethod
@@ -840,150 +418,46 @@ class Net:
         upload_wlo, uploaded_wlo, download_wlo, downloaded_wlo = sensors.Net.stats(WLO_CARD, interval)
 
         if config.THEME_DATA['STATS']['NET']['WLO']['UPLOAD']['TEXT'].get("SHOW", False):
-            upload_wlo_text = f"{bytes2human(upload_wlo, '%(value).1f %(symbol)s/s')}"
-            display.lcd.DisplayText(
-                text=f"{upload_wlo_text:>10}",
-                x=config.THEME_DATA['STATS']['NET']['WLO']['UPLOAD']['TEXT'].get("X", 0),
-                y=config.THEME_DATA['STATS']['NET']['WLO']['UPLOAD']['TEXT'].get("Y", 0),
-                font=config.THEME_DATA['STATS']['NET']['WLO']['UPLOAD']['TEXT'].get("FONT",
-                                                                                    "roboto-mono/RobotoMono-Regular.ttf"),
-                font_size=config.THEME_DATA['STATS']['NET']['WLO']['UPLOAD']['TEXT'].get("FONT_SIZE", 10),
-                font_color=config.THEME_DATA['STATS']['NET']['WLO']['UPLOAD']['TEXT'].get("FONT_COLOR", (0, 0, 0)),
-                background_color=config.THEME_DATA['STATS']['NET']['WLO']['UPLOAD']['TEXT'].get("BACKGROUND_COLOR",
-                                                                                                (255, 255, 255)),
-                background_image=get_full_path(config.THEME_DATA['PATH'],
-                                               config.THEME_DATA['STATS']['NET']['WLO']['UPLOAD']['TEXT'].get(
-                                                   "BACKGROUND_IMAGE",
-                                                   None))
-            )
+            sectionConfig = config.THEME_DATA['STATS']['NET']['WLO']['UPLOAD']['TEXT']
+            upload_wlo_text = format_number(upload_wlo, sectionConfig, "/s", True)
+            text_factory(upload_wlo_text, upload_wlo, sectionConfig)
 
         if config.THEME_DATA['STATS']['NET']['WLO']['UPLOADED']['TEXT'].get("SHOW", False):
-            uploaded_wlo_text = f"{bytes2human(uploaded_wlo)}"
-            display.lcd.DisplayText(
-                text=f"{uploaded_wlo_text:>6}",
-                x=config.THEME_DATA['STATS']['NET']['WLO']['UPLOADED']['TEXT'].get("X", 0),
-                y=config.THEME_DATA['STATS']['NET']['WLO']['UPLOADED']['TEXT'].get("Y", 0),
-                font=config.THEME_DATA['STATS']['NET']['WLO']['UPLOADED']['TEXT'].get("FONT",
-                                                                                      "roboto-mono/RobotoMono-Regular.ttf"),
-                font_size=config.THEME_DATA['STATS']['NET']['WLO']['UPLOADED']['TEXT'].get("FONT_SIZE", 10),
-                font_color=config.THEME_DATA['STATS']['NET']['WLO']['UPLOADED']['TEXT'].get("FONT_COLOR", (0, 0, 0)),
-                background_color=config.THEME_DATA['STATS']['NET']['WLO']['UPLOADED']['TEXT'].get("BACKGROUND_COLOR",
-                                                                                                  (255, 255, 255)),
-                background_image=get_full_path(config.THEME_DATA['PATH'],
-                                               config.THEME_DATA['STATS']['NET']['WLO']['UPLOADED']['TEXT'].get(
-                                                   "BACKGROUND_IMAGE",
-                                                   None))
-            )
+            sectionConfig = config.THEME_DATA['STATS']['NET']['WLO']['UPLOADED']['TEXT']
+            uploaded_wlo_text = format_number(uploaded_wlo, sectionConfig, "", True)
+            text_factory(uploaded_wlo_text, uploaded_wlo, sectionConfig)
 
         if config.THEME_DATA['STATS']['NET']['WLO']['DOWNLOAD']['TEXT'].get("SHOW", False):
-            download_wlo_text = f"{bytes2human(download_wlo, '%(value).1f %(symbol)s/s')}"
-            display.lcd.DisplayText(
-                text=f"{download_wlo_text:>10}",
-                x=config.THEME_DATA['STATS']['NET']['WLO']['DOWNLOAD']['TEXT'].get("X", 0),
-                y=config.THEME_DATA['STATS']['NET']['WLO']['DOWNLOAD']['TEXT'].get("Y", 0),
-                font=config.THEME_DATA['STATS']['NET']['WLO']['DOWNLOAD']['TEXT'].get("FONT",
-                                                                                      "roboto-mono/RobotoMono-Regular.ttf"),
-                font_size=config.THEME_DATA['STATS']['NET']['WLO']['DOWNLOAD']['TEXT'].get("FONT_SIZE", 10),
-                font_color=config.THEME_DATA['STATS']['NET']['WLO']['DOWNLOAD']['TEXT'].get("FONT_COLOR", (0, 0, 0)),
-                background_color=config.THEME_DATA['STATS']['NET']['WLO']['DOWNLOAD']['TEXT'].get("BACKGROUND_COLOR",
-                                                                                                  (255, 255, 255)),
-                background_image=get_full_path(config.THEME_DATA['PATH'],
-                                               config.THEME_DATA['STATS']['NET']['WLO']['DOWNLOAD']['TEXT'].get(
-                                                   "BACKGROUND_IMAGE",
-                                                   None))
-            )
+            sectionConfig = config.THEME_DATA['STATS']['NET']['WLO']['DOWNLOAD']['TEXT']
+            download_wlo_text = format_number(download_wlo, sectionConfig, "/s", True)
+            text_factory(download_wlo_text, download_wlo, sectionConfig)
 
         if config.THEME_DATA['STATS']['NET']['WLO']['DOWNLOADED']['TEXT'].get("SHOW", False):
-            downloaded_wlo_text = f"{bytes2human(downloaded_wlo)}"
-            display.lcd.DisplayText(
-                text=f"{downloaded_wlo_text:>6}",
-                x=config.THEME_DATA['STATS']['NET']['WLO']['DOWNLOADED']['TEXT'].get("X", 0),
-                y=config.THEME_DATA['STATS']['NET']['WLO']['DOWNLOADED']['TEXT'].get("Y", 0),
-                font=config.THEME_DATA['STATS']['NET']['WLO']['DOWNLOADED']['TEXT'].get("FONT",
-                                                                                        "roboto-mono/RobotoMono-Regular.ttf"),
-                font_size=config.THEME_DATA['STATS']['NET']['WLO']['DOWNLOADED']['TEXT'].get("FONT_SIZE", 10),
-                font_color=config.THEME_DATA['STATS']['NET']['WLO']['DOWNLOADED']['TEXT'].get("FONT_COLOR", (0, 0, 0)),
-                background_color=config.THEME_DATA['STATS']['NET']['WLO']['DOWNLOADED']['TEXT'].get("BACKGROUND_COLOR",
-                                                                                                    (255, 255, 255)),
-                background_image=get_full_path(config.THEME_DATA['PATH'],
-                                               config.THEME_DATA['STATS']['NET']['WLO']['DOWNLOADED']['TEXT'].get(
-                                                   "BACKGROUND_IMAGE",
-                                                   None))
-            )
+            sectionConfig = config.THEME_DATA['STATS']['NET']['WLO']['DOWNLOADED']['TEXT']
+            downloaded_wlo_text = format_number(downloaded_wlo, sectionConfig, "", True)
+            text_factory(downloaded_wlo_text, downloaded_wlo, sectionConfig)
 
         upload_eth, uploaded_eth, download_eth, downloaded_eth = sensors.Net.stats(ETH_CARD, interval)
 
         if config.THEME_DATA['STATS']['NET']['ETH']['UPLOAD']['TEXT'].get("SHOW", False):
-            upload_eth_text = f"{bytes2human(upload_eth, '%(value).1f %(symbol)s/s')}"
-            display.lcd.DisplayText(
-                text=f"{upload_eth_text:>10}",
-                x=config.THEME_DATA['STATS']['NET']['ETH']['UPLOAD']['TEXT'].get("X", 0),
-                y=config.THEME_DATA['STATS']['NET']['ETH']['UPLOAD']['TEXT'].get("Y", 0),
-                font=config.THEME_DATA['STATS']['NET']['ETH']['UPLOAD']['TEXT'].get("FONT",
-                                                                                    "roboto-mono/RobotoMono-Regular.ttf"),
-                font_size=config.THEME_DATA['STATS']['NET']['ETH']['UPLOAD']['TEXT'].get("FONT_SIZE", 10),
-                font_color=config.THEME_DATA['STATS']['NET']['ETH']['UPLOAD']['TEXT'].get("FONT_COLOR", (0, 0, 0)),
-                background_color=config.THEME_DATA['STATS']['NET']['ETH']['UPLOAD']['TEXT'].get("BACKGROUND_COLOR",
-                                                                                                (255, 255, 255)),
-                background_image=get_full_path(config.THEME_DATA['PATH'],
-                                               config.THEME_DATA['STATS']['NET']['ETH']['UPLOAD']['TEXT'].get(
-                                                   "BACKGROUND_IMAGE",
-                                                   None))
-            )
+            sectionConfig = config.THEME_DATA['STATS']['NET']['ETH']['UPLOAD']['TEXT']
+            upload_eth_text = format_number(upload_eth, sectionConfig, "/s", True)
+            text_factory(upload_eth_text, upload_eth, sectionConfig)
 
         if config.THEME_DATA['STATS']['NET']['ETH']['UPLOADED']['TEXT'].get("SHOW", False):
-            uploaded_eth_text = f"{bytes2human(uploaded_eth)}"
-            display.lcd.DisplayText(
-                text=f"{uploaded_eth_text:>6}",
-                x=config.THEME_DATA['STATS']['NET']['ETH']['UPLOADED']['TEXT'].get("X", 0),
-                y=config.THEME_DATA['STATS']['NET']['ETH']['UPLOADED']['TEXT'].get("Y", 0),
-                font=config.THEME_DATA['STATS']['NET']['ETH']['UPLOADED']['TEXT'].get("FONT",
-                                                                                      "roboto-mono/RobotoMono-Regular.ttf"),
-                font_size=config.THEME_DATA['STATS']['NET']['ETH']['UPLOADED']['TEXT'].get("FONT_SIZE", 10),
-                font_color=config.THEME_DATA['STATS']['NET']['ETH']['UPLOADED']['TEXT'].get("FONT_COLOR", (0, 0, 0)),
-                background_color=config.THEME_DATA['STATS']['NET']['ETH']['UPLOADED']['TEXT'].get("BACKGROUND_COLOR",
-                                                                                                  (255, 255, 255)),
-                background_image=get_full_path(config.THEME_DATA['PATH'],
-                                               config.THEME_DATA['STATS']['NET']['ETH']['UPLOADED']['TEXT'].get(
-                                                   "BACKGROUND_IMAGE",
-                                                   None))
-            )
+            sectionConfig = config.THEME_DATA['STATS']['NET']['ETH']['UPLOADED']['TEXT']
+            uploaded_eth_text = format_number(uploaded_eth, sectionConfig, "", True)
+            text_factory(uploaded_eth_text, uploaded_eth, sectionConfig)
 
         if config.THEME_DATA['STATS']['NET']['ETH']['DOWNLOAD']['TEXT'].get("SHOW", False):
-            download_eth_text = f"{bytes2human(download_eth, '%(value).1f %(symbol)s/s')}"
-            display.lcd.DisplayText(
-                text=f"{download_eth_text:>10}",
-                x=config.THEME_DATA['STATS']['NET']['ETH']['DOWNLOAD']['TEXT'].get("X", 0),
-                y=config.THEME_DATA['STATS']['NET']['ETH']['DOWNLOAD']['TEXT'].get("Y", 0),
-                font=config.THEME_DATA['STATS']['NET']['ETH']['DOWNLOAD']['TEXT'].get("FONT",
-                                                                                      "roboto-mono/RobotoMono-Regular.ttf"),
-                font_size=config.THEME_DATA['STATS']['NET']['ETH']['DOWNLOAD']['TEXT'].get("FONT_SIZE", 10),
-                font_color=config.THEME_DATA['STATS']['NET']['ETH']['DOWNLOAD']['TEXT'].get("FONT_COLOR", (0, 0, 0)),
-                background_color=config.THEME_DATA['STATS']['NET']['ETH']['DOWNLOAD']['TEXT'].get("BACKGROUND_COLOR",
-                                                                                                  (255, 255, 255)),
-                background_image=get_full_path(config.THEME_DATA['PATH'],
-                                               config.THEME_DATA['STATS']['NET']['ETH']['DOWNLOAD']['TEXT'].get(
-                                                   "BACKGROUND_IMAGE",
-                                                   None))
-            )
+            sectionConfig = config.THEME_DATA['STATS']['NET']['ETH']['DOWNLOAD']['TEXT']
+            download_eth_text = format_number(download_eth, sectionConfig, "/s", True)
+            text_factory(download_eth_text, download_eth, sectionConfig)
 
         if config.THEME_DATA['STATS']['NET']['ETH']['DOWNLOADED']['TEXT'].get("SHOW", False):
-            downloaded_eth_text = f"{bytes2human(downloaded_eth)}"
-            display.lcd.DisplayText(
-                text=f"{downloaded_eth_text:>6}",
-                x=config.THEME_DATA['STATS']['NET']['ETH']['DOWNLOADED']['TEXT'].get("X", 0),
-                y=config.THEME_DATA['STATS']['NET']['ETH']['DOWNLOADED']['TEXT'].get("Y", 0),
-                font=config.THEME_DATA['STATS']['NET']['ETH']['DOWNLOADED']['TEXT'].get("FONT",
-                                                                                        "roboto-mono/RobotoMono-Regular.ttf"),
-                font_size=config.THEME_DATA['STATS']['NET']['ETH']['DOWNLOADED']['TEXT'].get("FONT_SIZE", 10),
-                font_color=config.THEME_DATA['STATS']['NET']['ETH']['DOWNLOADED']['TEXT'].get("FONT_COLOR", (0, 0, 0)),
-                background_color=config.THEME_DATA['STATS']['NET']['ETH']['DOWNLOADED']['TEXT'].get("BACKGROUND_COLOR",
-                                                                                                    (255, 255, 255)),
-                background_image=get_full_path(config.THEME_DATA['PATH'],
-                                               config.THEME_DATA['STATS']['NET']['ETH']['DOWNLOADED']['TEXT'].get(
-                                                   "BACKGROUND_IMAGE",
-                                                   None))
-            )
+            sectionConfig = config.THEME_DATA['STATS']['NET']['ETH']['DOWNLOADED']['TEXT']
+            downloaded_eth_text = format_number(downloaded_eth, sectionConfig, "", True)
+            text_factory(downloaded_eth_text, downloaded_eth, sectionConfig)
 
 
 class Date:
@@ -998,36 +472,29 @@ class Date:
             lc_time = babel.dates.LC_TIME
 
         if config.THEME_DATA['STATS']['DATE']['DAY']['TEXT'].get("SHOW", False):
-            date_format = config.THEME_DATA['STATS']['DATE']['DAY']['TEXT'].get("FORMAT", 'medium')
+            sectionConfig = config.THEME_DATA['STATS']['DATE']['DAY']['TEXT']
+            date_format = sectionConfig.get("FORMAT", 'medium')
             display.lcd.DisplayText(
                 text=f"{babel.dates.format_date(date_now, format=date_format, locale=lc_time)}",
-                x=config.THEME_DATA['STATS']['DATE']['DAY']['TEXT'].get("X", 0),
-                y=config.THEME_DATA['STATS']['DATE']['DAY']['TEXT'].get("Y", 0),
-                font=config.THEME_DATA['STATS']['DATE']['DAY']['TEXT'].get("FONT",
-                                                                           "roboto-mono/RobotoMono-Regular.ttf"),
-                font_size=config.THEME_DATA['STATS']['DATE']['DAY']['TEXT'].get("FONT_SIZE", 10),
-                font_color=config.THEME_DATA['STATS']['DATE']['DAY']['TEXT'].get("FONT_COLOR", (0, 0, 0)),
-                background_color=config.THEME_DATA['STATS']['DATE']['DAY']['TEXT'].get("BACKGROUND_COLOR",
-                                                                                       (255, 255, 255)),
-                background_image=get_full_path(config.THEME_DATA['PATH'],
-                                               config.THEME_DATA['STATS']['DATE']['DAY']['TEXT'].get("BACKGROUND_IMAGE",
-                                                                                                     None))
+                x=sectionConfig.get("X", 0),
+                y=sectionConfig.get("Y", 0),
+                font=sectionConfig.get("FONT", config.THEME_DEFAULTS['FONT']),
+                font_size=sectionConfig.get("FONT_SIZE", config.THEME_DEFAULTS['FONT_SIZE']),
+                font_color=sectionConfig.get("FONT_COLOR", config.THEME_DEFAULTS['FONT_COLOR']),
+                background_color=sectionConfig.get("BACKGROUND_COLOR", config.THEME_DEFAULTS['TEXT_BACKGROUND_COLOR']),
+                background_image=get_full_path(config.THEME_DATA['PATH'], sectionConfig.get("BACKGROUND_IMAGE", config.THEME_DEFAULTS['TEXT_BACKGROUND_IMAGE']))
             )
 
         if config.THEME_DATA['STATS']['DATE']['HOUR']['TEXT'].get("SHOW", False):
-            time_format = config.THEME_DATA['STATS']['DATE']['HOUR']['TEXT'].get("FORMAT", 'medium')
+            sectionConfig = config.THEME_DATA['STATS']['DATE']['HOUR']['TEXT']
+            time_format = sectionConfig.get("FORMAT", 'medium')
             display.lcd.DisplayText(
                 text=f"{babel.dates.format_time(date_now, format=time_format, locale=lc_time)}",
-                x=config.THEME_DATA['STATS']['DATE']['HOUR']['TEXT'].get("X", 0),
-                y=config.THEME_DATA['STATS']['DATE']['HOUR']['TEXT'].get("Y", 0),
-                font=config.THEME_DATA['STATS']['DATE']['HOUR']['TEXT'].get("FONT",
-                                                                            "roboto-mono/RobotoMono-Regular.ttf"),
-                font_size=config.THEME_DATA['STATS']['DATE']['HOUR']['TEXT'].get("FONT_SIZE", 10),
-                font_color=config.THEME_DATA['STATS']['DATE']['HOUR']['TEXT'].get("FONT_COLOR", (0, 0, 0)),
-                background_color=config.THEME_DATA['STATS']['DATE']['HOUR']['TEXT'].get("BACKGROUND_COLOR",
-                                                                                        (255, 255, 255)),
-                background_image=get_full_path(config.THEME_DATA['PATH'],
-                                               config.THEME_DATA['STATS']['DATE']['HOUR']['TEXT'].get(
-                                                   "BACKGROUND_IMAGE",
-                                                   None))
+                x=sectionConfig.get("X", 0),
+                y=sectionConfig.get("Y", 0),
+                font=sectionConfig.get("FONT", config.THEME_DEFAULTS['FONT']),
+                font_size=sectionConfig.get("FONT_SIZE", config.THEME_DEFAULTS['FONT_SIZE']),
+                font_color=sectionConfig.get("FONT_COLOR", config.THEME_DEFAULTS['FONT_COLOR']),
+                background_color=sectionConfig.get("BACKGROUND_COLOR", config.THEME_DEFAULTS['TEXT_BACKGROUND_COLOR']),
+                background_image=get_full_path(config.THEME_DATA['PATH'], sectionConfig.get("BACKGROUND_IMAGE", config.THEME_DEFAULTS['TEXT_BACKGROUND_IMAGE']))
             )

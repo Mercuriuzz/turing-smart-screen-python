@@ -125,13 +125,11 @@ class Display:
                     text=config.THEME_DATA['static_text'][text].get("TEXT"),
                     x=config.THEME_DATA['static_text'][text].get("X", 0),
                     y=config.THEME_DATA['static_text'][text].get("Y", 0),
-                    font=config.THEME_DATA['static_text'][text].get("FONT", "roboto-mono/RobotoMono-Regular.ttf"),
-                    font_size=config.THEME_DATA['static_text'][text].get("FONT_SIZE", 10),
-                    font_color=config.THEME_DATA['static_text'][text].get("FONT_COLOR", (0, 0, 0)),
-                    background_color=config.THEME_DATA['static_text'][text].get("BACKGROUND_COLOR", (255, 255, 255)),
-                    background_image=_get_full_path(config.THEME_DATA['PATH'],
-                                                    config.THEME_DATA['static_text'][text].get("BACKGROUND_IMAGE",
-                                                                                               None))
+                    font=config.THEME_DATA['static_text'][text].get("FONT", config.THEME_DEFAULTS['FONT']),
+                    font_size=config.THEME_DATA['static_text'][text].get("FONT_SIZE", config.THEME_DEFAULTS['FONT_SIZE']),
+                    font_color=config.THEME_DATA['static_text'][text].get("FONT_COLOR", config.THEME_DEFAULTS['FONT_COLOR']),
+                    background_color=config.THEME_DATA['static_text'][text].get("BACKGROUND_COLOR", config.THEME_DEFAULTS['TEXT_BACKGROUND_COLOR']),
+                    background_image=_get_full_path(config.THEME_DATA['PATH'], config.THEME_DATA['static_text'][text].get("BACKGROUND_IMAGE", config.THEME_DEFAULTS['TEXT_BACKGROUND_IMAGE']))
                 )
 
 

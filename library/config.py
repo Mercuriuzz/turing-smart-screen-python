@@ -37,6 +37,7 @@ PATH = sys.path[0]
 CONFIG_DATA = load_yaml("config.yaml")
 THEME_DEFAULT = load_yaml("res/themes/default.yaml")
 THEME_DATA = None
+THEME_DEFAULTS = {}
 
 
 def copy_default(default, theme):
@@ -50,11 +51,37 @@ def copy_default(default, theme):
 
 def load_theme():
     global THEME_DATA
+    global THEME_DEFAULTS
     try:
         theme_path = "res/themes/" + CONFIG_DATA['config']['THEME'] + "/"
         logger.info("Loading theme %s from %s" % (CONFIG_DATA['config']['THEME'], theme_path + "theme.yaml"))
         THEME_DATA = load_yaml(theme_path + "theme.yaml")
         THEME_DATA['PATH'] = theme_path
+        
+        if THEME_DATA.get('defaults', False):
+            THEME_DEFAULTS["BAR_COLOR"] = THEME_DATA['defaults'].get('BAR_COLOR', (255, 255, 255))
+            THEME_DEFAULTS['BAR_OUTLINE'] = THEME_DATA['defaults'].get('BAR_OUTLINE', False)
+            THEME_DEFAULTS['BAR_BACKGROUND_COLOR'] = THEME_DATA['defaults'].get('BAR_BACKGROUND_COLOR', (0, 0, 0))
+            THEME_DEFAULTS['BAR_BACKGROUND_IMAGE'] = THEME_DATA['defaults'].get('BAR_BACKGROUND_IMAGE', False)
+            THEME_DEFAULTS['FONT'] = THEME_DATA['defaults'].get('FONT', "roboto-mono/RobotoMono-Regular.ttf")
+            THEME_DEFAULTS['FONT_SIZE'] = THEME_DATA['defaults'].get('FONT_SIZE', 10)
+            THEME_DEFAULTS['FONT_COLOR'] = THEME_DATA['defaults'].get('FONT_COLOR', (255, 255, 255))
+            THEME_DEFAULTS['TEXT_BACKGROUND_COLOR'] = THEME_DATA['defaults'].get('TEXT_BACKGROUND_COLOR', (0, 0, 0))
+            THEME_DEFAULTS['TEXT_BACKGROUND_IMAGE'] = THEME_DATA['defaults'].get('TEXT_BACKGROUND_IMAGE', False)
+            THEME_DEFAULTS['UNIT_SPACE'] = THEME_DATA['defaults'].get('UNIT_SPACE', True)
+            del THEME_DATA['defaults']
+        else:
+            THEME_DEFAULTS['BAR_COLOR'] = (255, 255, 255)
+            THEME_DEFAULTS['BAR_OUTLINE'] = False
+            THEME_DEFAULTS['BAR_BACKGROUND_COLOR'] = (0, 0, 0)
+            THEME_DEFAULTS['BAR_BACKGROUND_IMAGE'] = False
+            THEME_DEFAULTS['FONT'] = "roboto-mono/RobotoMono-Regular.ttf"
+            THEME_DEFAULTS['FONT_SIZE'] = 10
+            THEME_DEFAULTS['FONT_COLOR'] = (255, 255, 255)
+            THEME_DEFAULTS['TEXT_BACKGROUND_COLOR'] = (0, 0, 0)
+            THEME_DEFAULTS['TEXT_BACKGROUND_IMAGE'] = False            
+            THEME_DEFAULTS['UNIT_SPACE'] = True
+        
     except:
         logger.error("Theme not found or contains errors!")
         try:

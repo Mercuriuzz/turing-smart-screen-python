@@ -3,6 +3,18 @@ display:
   DISPLAY_ORIENTATION: portrait
   DISPLAY_RGB_LED: 0, 0, 0
 
+defaults:
+    BAR_COLOR: 0, 255, 0
+    BAR_OUTLINE: False
+    BAR_BACKGROUND_COLOR: 0, 0, 0
+    BAR_BACKGROUND_IMAGE: backgroundWindows.png
+    FONT: nimbus-mono/nimbus-mono-b.ttf
+    FONT_SIZE: 15
+    FONT_COLOR: 0, 255, 0
+    TEXT_BACKGROUND_COLOR: 0, 0, 0
+    TEXT_BACKGROUND_IMAGE: False
+    UNIT_SPACE: False
+
 static_images:
   BACKGROUND:
     PATH: backgroundWindows.png
@@ -10,114 +22,104 @@ static_images:
     Y: 0
     WIDTH: 320
     HEIGHT: 480
+
 static_text:
   CPU_NAME:
    TEXT: " Intel i5-13600KF "
    X: 175
    Y: 29
-   FONT: nimbus-mono/nimbus-mono-b.ttf
    FONT_SIZE: 12
-   FONT_COLOR: 0, 255, 0
-   BACKGROUND_COLOR: 0, 0, 0
   GPU_NAME:
    TEXT: " ROG Strix RTX 4080 OC 16G "
    X: 106
    Y: 104
-   FONT: nimbus-mono/nimbus-mono-b.ttf
    FONT_SIZE: 12
-   FONT_COLOR: 0, 255, 0
-   BACKGROUND_COLOR: 0, 0, 0
+
 STATS:
   CPU:
     TEMPERATURE:
       INTERVAL: 5
       GRAPH:
         SHOW: True
+        TRESHOLD:
+            VALUE: 80
+            BAR_COLOR: 255, 0, 0
         X: 175
         Y: 62
         WIDTH: 125
         HEIGHT: 12
         MIN_VALUE: 20
         MAX_VALUE: 90
-        BAR_COLOR: 0, 255, 0
-        BAR_OUTLINE: False
-        BACKGROUND_IMAGE: backgroundWindows.png
       TEXT:
         SHOW: True
         SHOW_UNIT: True
-        X: 80
+        UNIT_SPACE: True
+        TRESHOLD:
+            VALUE: 80
+            TEXT_COLOR: 255, 0, 0
+        X: 110
         Y: 62
-        FONT: nimbus-mono/nimbus-mono-b.ttf
-        FONT_SIZE: 15
-        FONT_COLOR: 0, 255, 0
-        BACKGROUND_COLOR: 0, 0, 0
     PERCENTAGE:
       INTERVAL: 1
       TEXT:
         SHOW: True
         SHOW_UNIT: True
-        X: 80
+        UNIT_SPACE: True
+        TRESHOLD:
+            VALUE: 85
+            TEXT_COLOR: 255, 0, 0
+        X: 110
         Y: 46
-        FONT: nimbus-mono/nimbus-mono-b.ttf
-        FONT_SIZE: 15
-        FONT_COLOR: 0, 255, 0
-        BACKGROUND_COLOR: 0, 0, 0
       GRAPH:
         SHOW: True
+        TRESHOLD:
+            VALUE: 85
+            BAR_COLOR: 255, 0, 0
         X: 175
         Y: 46
         WIDTH: 125
         HEIGHT: 12
         MIN_VALUE: 0
         MAX_VALUE: 100
-        BAR_COLOR: 0, 255, 0
-        BAR_OUTLINE: False
-        BACKGROUND_IMAGE: backgroundWindows.png
     FREQUENCY:
       INTERVAL: 5
       TEXT:
         SHOW: True
         SHOW_UNIT: True
-        X: 80
+        UNIT_SPACE: True
+        X: 101
         Y: 78
-        FONT: nimbus-mono/nimbus-mono-b.ttf
-        FONT_SIZE: 15
-        FONT_COLOR: 0, 255, 0
-        BACKGROUND_COLOR: 0, 0, 0
   GPU:
     INTERVAL: 1
     PERCENTAGE:
       TEXT:
         SHOW: True
         SHOW_UNIT: True
-        X: 80
+        UNIT_SPACE: True
+        TRESHOLD:
+            VALUE: 85
+            TEXT_COLOR: 255, 0, 0
+        X: 110
         Y: 119
-        FONT: nimbus-mono/nimbus-mono-b.ttf
-        FONT_SIZE: 15
-        FONT_COLOR: 0, 255, 0
-        BACKGROUND_COLOR: 0, 0, 0
       GRAPH:
         SHOW: True
+        TRESHOLD:
+            VALUE: 85
+            BAR_COLOR: 255, 0, 0
         X: 175
         Y: 119
         WIDTH: 125
         HEIGHT: 12
         MIN_VALUE: 0
         MAX_VALUE: 100
-        BAR_COLOR: 0, 255, 0
-        BAR_OUTLINE: False
-        BACKGROUND_IMAGE: backgroundWindows.png
     MEMORY:
       TEXT:
         SHOW: True
         SHOW_UNIT: True
-        UNIT: G
-        X: 80
+        TEXT_LENGTH: 5
+        DECIMALS: 2
+        X: 92
         Y: 137
-        FONT: nimbus-mono/nimbus-mono-b.ttf
-        FONT_SIZE: 15
-        FONT_COLOR: 0, 255, 0
-        BACKGROUND_COLOR: 0, 0, 0
       GRAPH:
         SHOW: True
         X: 175
@@ -126,30 +128,27 @@ STATS:
         HEIGHT: 12
         MIN_VALUE: 0
         MAX_VALUE: 100
-        BAR_COLOR: 0, 255, 0
-        BAR_OUTLINE: False
-        BACKGROUND_IMAGE: backgroundWindows.png
     TEMPERATURE:
       TEXT:
         SHOW: True
         SHOW_UNIT: True
-        X: 80
+        UNIT_SPACE: True
+        TRESHOLD:
+            VALUE: 60
+            TEXT_COLOR: 255, 0, 0
+        X: 110
         Y: 153
-        FONT: nimbus-mono/nimbus-mono-b.ttf
-        FONT_SIZE: 15
-        FONT_COLOR: 0, 255, 0
-        BACKGROUND_COLOR: 0, 0, 0
       GRAPH:
         SHOW: True
+        TRESHOLD:
+            VALUE: 60
+            BAR_COLOR: 255, 0, 0
         X: 175
         Y: 153
         WIDTH: 125
         HEIGHT: 12
         MIN_VALUE: 20
         MAX_VALUE: 70
-        BAR_COLOR: 0, 255, 0
-        BAR_OUTLINE: False
-        BACKGROUND_IMAGE: backgroundWindows.png
   MEMORY:
     INTERVAL: 5
     SWAP:
@@ -161,9 +160,6 @@ STATS:
         HEIGHT: 13
         MIN_VALUE: 0
         MAX_VALUE: 100
-        BAR_COLOR: 255, 0, 0
-        BAR_OUTLINE: False
-        BACKGROUND_COLOR: 0, 0, 0
     VIRTUAL:
       GRAPH:
         SHOW: True
@@ -173,50 +169,27 @@ STATS:
         HEIGHT: 12
         MIN_VALUE: 0
         MAX_VALUE: 100
-        BAR_COLOR: 0, 255, 0
-        BAR_OUTLINE: False
-        BACKGROUND_IMAGE: backgroundWindows.png
       PERCENT_TEXT:
         SHOW: True
         SHOW_UNIT: True
-        X: 80
+        X: 110
         Y: 195
-        FONT: nimbus-mono/nimbus-mono-b.ttf
-        FONT_SIZE: 15
-        FONT_COLOR: 0, 255, 0
-        BACKGROUND_COLOR: 0, 0, 0
       USED:
         SHOW: True
         SHOW_UNIT: True
-        X: 80
+        UNIT: False
+        DECIMALS: AUTO
+        X: 92
         Y: 211
-        FONT: nimbus-mono/nimbus-mono-b.ttf
-        FONT_SIZE: 15
-        FONT_COLOR: 0, 255, 0
-        BACKGROUND_COLOR: 0, 0, 0
       FREE:
         SHOW: True
         SHOW_UNIT: True
-        X: 80
+        UNIT: False
+        DECIMALS: AUTO
+        X: 92
         Y: 227
-        FONT: nimbus-mono/nimbus-mono-b.ttf
-        FONT_SIZE: 15
-        FONT_COLOR: 0, 255, 0
-        BACKGROUND_COLOR: 0, 0, 0
   DISK:
     INTERVAL: 10
-#    USED:
-#      GRAPH:
-#        SHOW: False
-#        X: 115
-#        Y: 357
-#        WIDTH: 178
-#        HEIGHT: 13
-#        MIN_VALUE: 0
-#        MAX_VALUE: 100
-#        BAR_COLOR: 255, 0, 0
-#        BAR_OUTLINE: False
-#        BACKGROUND_COLOR: 0, 0, 0
   DISKS:
     DISK1:
         PARTITION: "C:\\"
@@ -229,28 +202,19 @@ STATS:
             HEIGHT: 12
             MIN_VALUE: 0
             MAX_VALUE: 100
-            BAR_COLOR: 0, 255, 0
-            BAR_OUTLINE: False
-            BACKGROUND_IMAGE: backgroundWindows.png
           PERCENT_TEXT:
             SHOW: True
             SHOW_UNIT: True
-            X: 125
+            UNIT_SPACE: False
+            DECIMALS: 0
+            X: 134
             Y: 385
-            FONT: nimbus-mono/nimbus-mono-b.ttf
-            FONT_SIZE: 15
-            FONT_COLOR: 0, 255, 0
-            BACKGROUND_COLOR: 0, 0, 0    
         FREE:
           TEXT:
             SHOW: True
             SHOW_UNIT: True
             X: 55
             Y: 385
-            FONT: nimbus-mono/nimbus-mono-b.ttf
-            FONT_SIZE: 15
-            FONT_COLOR: 0, 255, 0
-            BACKGROUND_COLOR: 0, 0, 0   
     DISK2:
         PARTITION: "D:\\"
         USED:
@@ -262,28 +226,19 @@ STATS:
             HEIGHT: 12
             MIN_VALUE: 0
             MAX_VALUE: 100
-            BAR_COLOR: 0, 255, 0
-            BAR_OUTLINE: False
-            BACKGROUND_IMAGE: backgroundWindows.png
           PERCENT_TEXT:
             SHOW: True
             SHOW_UNIT: True
-            X: 125
+            UNIT_SPACE: False
+            DECIMALS: 0
+            X: 134
             Y: 400
-            FONT: nimbus-mono/nimbus-mono-b.ttf
-            FONT_SIZE: 15
-            FONT_COLOR: 0, 255, 0
-            BACKGROUND_COLOR: 0, 0, 0
         FREE:
           TEXT:
             SHOW: True
             SHOW_UNIT: True
             X: 55
             Y: 400
-            FONT: nimbus-mono/nimbus-mono-b.ttf
-            FONT_SIZE: 15
-            FONT_COLOR: 0, 255, 0
-            BACKGROUND_COLOR: 0, 0, 0   
     DISK3:
         PARTITION: "E:\\"
         USED:
@@ -295,28 +250,19 @@ STATS:
             HEIGHT: 11
             MIN_VALUE: 0
             MAX_VALUE: 100
-            BAR_COLOR: 0, 255, 0
-            BAR_OUTLINE: False
-            BACKGROUND_IMAGE: backgroundWindows.png
           PERCENT_TEXT:
             SHOW: True
             SHOW_UNIT: True
-            X: 125
+            UNIT_SPACE: False
+            DECIMALS: 0
+            X: 134
             Y: 416
-            FONT: nimbus-mono/nimbus-mono-b.ttf
-            FONT_SIZE: 15
-            FONT_COLOR: 0, 255, 0
-            BACKGROUND_COLOR: 0, 0, 0
         FREE:
           TEXT:
             SHOW: True
             SHOW_UNIT: True
             X: 55
             Y: 416
-            FONT: nimbus-mono/nimbus-mono-b.ttf
-            FONT_SIZE: 15
-            FONT_COLOR: 0, 255, 0
-            BACKGROUND_COLOR: 0, 0, 0   
     DISK4:
         PARTITION: "F:\\"
         USED:
@@ -328,28 +274,19 @@ STATS:
             HEIGHT: 12
             MIN_VALUE: 0
             MAX_VALUE: 100
-            BAR_COLOR: 0, 255, 0
-            BAR_OUTLINE: False
-            BACKGROUND_IMAGE: backgroundWindows.png
           PERCENT_TEXT:
             SHOW: True
             SHOW_UNIT: True
-            X: 125
+            UNIT_SPACE: False
+            DECIMALS: 0
+            X: 134
             Y: 431
-            FONT: nimbus-mono/nimbus-mono-b.ttf
-            FONT_SIZE: 15
-            FONT_COLOR: 0, 255, 0
-            BACKGROUND_COLOR: 0, 0, 0
         FREE:
           TEXT:
             SHOW: True
             SHOW_UNIT: True
             X: 55
-            Y: 431
-            FONT: nimbus-mono/nimbus-mono-b.ttf
-            FONT_SIZE: 15
-            FONT_COLOR: 0, 255, 0
-            BACKGROUND_COLOR: 0, 0, 0   
+            Y: 431 
     DISK5:
         PARTITION: "G:\\"
         USED:
@@ -361,67 +298,42 @@ STATS:
             HEIGHT: 12
             MIN_VALUE: 0
             MAX_VALUE: 100
-            BAR_COLOR: 0, 255, 0
-            BAR_OUTLINE: False
-            BACKGROUND_IMAGE: backgroundWindows.png
           PERCENT_TEXT:
             SHOW: True
             SHOW_UNIT: True
-            X: 125
+            UNIT_SPACE: False
+            DECIMALS: 0
+            X: 134
             Y: 446
-            FONT: nimbus-mono/nimbus-mono-b.ttf
-            FONT_SIZE: 15
-            FONT_COLOR: 0, 255, 0
-            BACKGROUND_COLOR: 0, 0, 0
         FREE:
           TEXT:
             SHOW: True
             SHOW_UNIT: True
             X: 55
             Y: 446
-            FONT: nimbus-mono/nimbus-mono-b.ttf
-            FONT_SIZE: 15
-            FONT_COLOR: 0, 255, 0
-            BACKGROUND_COLOR: 0, 0, 0   
   NET:
     INTERVAL: 1
     ETH:
       DOWNLOAD:
         TEXT:
           SHOW: True
-          X: 80
+          X: 90
           Y: 327
-          FONT: nimbus-mono/nimbus-mono-b.ttf
-          FONT_SIZE: 15
-          FONT_COLOR: 0, 255, 0
-          BACKGROUND_COLOR: 0, 0, 0
       DOWNLOADED:
         TEXT:
           SHOW: True
-          X: 80
+          X: 108
           Y: 343
-          FONT: nimbus-mono/nimbus-mono-b.ttf
-          FONT_SIZE: 15
-          FONT_COLOR: 0, 255, 0
-          BACKGROUND_COLOR: 0, 0, 0
       UPLOAD:
         TEXT:
           SHOW: True
-          X: 80
+          X: 90
           Y: 271
-          FONT: nimbus-mono/nimbus-mono-b.ttf
-          FONT_SIZE: 15
-          FONT_COLOR: 0, 255, 0
-          BACKGROUND_COLOR: 0, 0, 0
       UPLOADED:
         TEXT:
           SHOW: True
-          X: 80
+          X: 108
           Y: 286
-          FONT: nimbus-mono/nimbus-mono-b.ttf
-          FONT_SIZE: 15
-          FONT_COLOR: 0, 255, 0
-          BACKGROUND_COLOR: 0, 0, 0
   DATE:
     INTERVAL: 1
     HOUR:
@@ -429,7 +341,5 @@ STATS:
         SHOW: True
         X: 226
         Y: 4
-        FONT: nimbus-mono/nimbus-mono-b.ttf
         FONT_SIZE: 16
-        FONT_COLOR: 0, 255, 0
-        BACKGROUND_COLOR: 0, 0, 00
+
